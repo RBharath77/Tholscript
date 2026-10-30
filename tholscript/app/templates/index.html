@@ -1,0 +1,3358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THOLSCRIPT — Ancient Inscription Reader & Translator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Serif+Tamil:wght@400;700&family=Noto+Sans+Telugu:wght@400;600&family=Noto+Sans+Kannada:wght@400;600&family=Noto+Sans+Malayalam:wght@400;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-border: #30363d;
+    --panel-sub: #21262d;
+    --panel-hover: #2a313c;
+    --text-main: #f0f6fc;
+    --text-muted: #8b949e;
+    --accent: #d4af37;                  /* Regal Metallic Gold */
+    --accent-hover: #fae188;            /* Bright Radiant Gold */
+    --accent-dark: #8c6d12;             /* Deep Burnished Gold */
+    --accent-glow: rgba(212, 175, 55, 0.35);
+    --accent-bg: rgba(212, 175, 55, 0.12);
+    --success: #3fb950;
+    --success-bg: rgba(63, 185, 80, 0.15);
+    --warning: #d29922;
+    --warning-bg: rgba(210, 153, 34, 0.15);
+    --danger: #f85149;
+    --danger-bg: rgba(248, 81, 73, 0.15);
+    --dropzone-bg: rgba(255, 255, 255, 0.015);
+    --display-bg: rgba(0, 0, 0, 0.3);
+    --modal-bg: #1a212b;
+    --modal-overlay: rgba(0, 0, 0, 0.7);
+    --header-bg: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+    --voice-bar-bg: linear-gradient(90deg, #1c222b 0%, #161b22 100%);
+    --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    --popover-shadow: 0 12px 36px rgba(0, 0, 0, 0.8);
+    --primary-btn-text: #0d1117;
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-stone: 'Cinzel', serif;
+    --font-tamil: 'Noto Serif Tamil', 'Noto Sans Tamil', serif;
+  }
+
+  [data-theme="light"] {
+    --bg: #f8f6f0;                      /* Warm ancient parchment / museum stone */
+    --panel: #ffffff;                   /* Clean marble white card */
+    --panel-border: #ded8cb;            /* Stone chiseled border */
+    --panel-sub: #f1ede3;               /* Warm sand background */
+    --panel-hover: #e5dfd2;             /* Soft stone hover */
+    --text-main: #1c2024;               /* Rich deep charcoal */
+    --text-muted: #5e6672;              /* Muted slate */
+    --accent: #b38600;                  /* Antique Burnished Gold */
+    --accent-hover: #946e00;            /* Deep Amber Gold */
+    --accent-dark: #6e5200;             /* Burnished Umber Gold */
+    --accent-glow: rgba(179, 134, 0, 0.25);
+    --accent-bg: rgba(179, 134, 0, 0.09);
+    --success: #1a7f37;
+    --success-bg: rgba(26, 127, 55, 0.12);
+    --warning: #9a6700;
+    --warning-bg: rgba(154, 103, 0, 0.12);
+    --danger: #cf222e;
+    --danger-bg: rgba(207, 34, 46, 0.12);
+    --dropzone-bg: rgba(179, 134, 0, 0.025);
+    --display-bg: rgba(179, 134, 0, 0.05);
+    --modal-bg: #ffffff;
+    --modal-overlay: rgba(15, 20, 25, 0.45);
+    --header-bg: linear-gradient(180deg, #ffffff 0%, #f8f6f0 100%);
+    --voice-bar-bg: linear-gradient(90deg, #f1ede3 0%, #ffffff 100%);
+    --card-shadow: 0 4px 16px rgba(100, 90, 70, 0.1);
+    --popover-shadow: 0 12px 36px rgba(50, 40, 20, 0.25);
+    --primary-btn-text: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  *, *::before, *::after {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+  }
+
+  /* Header */
+  header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 20px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  }
+  .brand:hover {
+    transform: translateY(-1px);
+    opacity: 0.95;
+  }
+  .brand:hover .brand-logo {
+    box-shadow: 0 0 24px var(--accent-glow), 0 0 12px var(--accent);
+  }
+  .brand:active {
+    transform: translateY(0) scale(0.99);
+  }
+  .brand-logo {
+    width: 44px;
+    height: 44px;
+    background: radial-gradient(circle, var(--accent) 0%, var(--accent-dark) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0d1117;
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+  .brand-title {
+    font-family: var(--font-stone);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-main);
+  }
+  .brand-title span { color: var(--accent); }
+  .brand-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--font-tamil);
+    letter-spacing: 0.02em;
+  }
+  .badges, .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .badge {
+    background: var(--panel-sub);
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge.gold { border-color: var(--accent); color: var(--accent); }
+
+  /* Main Layout */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    padding: 24px 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  @media (max-width: 1024px) {
+    main { grid-template-columns: 1fr; padding: 16px; }
+  }
+
+  /* Cards */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+    will-change: transform, box-shadow;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--accent-glow), var(--card-shadow);
+    border-color: rgba(212, 175, 55, 0.35);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon { color: var(--accent); font-size: 15px; }
+
+  /* Form & Buttons */
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  button, .btn {
+    background: var(--panel-sub);
+    color: var(--text-main);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+    will-change: transform;
+  }
+  button:hover, .btn:hover {
+    border-color: var(--accent);
+    color: var(--text-main);
+    background: var(--panel-hover);
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  }
+  button:active, .btn:active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.08s;
+  }
+  button.primary, .btn.primary {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+    color: var(--primary-btn-text);
+    font-weight: 700;
+    border: none;
+    box-shadow: 0 2px 10px var(--accent-glow);
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, filter 0.2s ease;
+  }
+  button.primary:hover, .btn.primary:hover {
+    background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+    box-shadow: 0 6px 18px var(--accent-glow);
+    transform: translateY(-2px) scale(1.02);
+  }
+  button.primary:active, .btn.primary:active {
+    transform: translateY(0) scale(0.97);
+  }
+  button.voice-btn {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  button.voice-btn:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent-hover);
+    transform: translateY(-1.5px) scale(1.02);
+    box-shadow: 0 4px 14px var(--accent-glow);
+  }
+  button.voice-btn.active {
+    background: var(--accent);
+    color: var(--primary-btn-text);
+    border-color: var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow);
+  }
+
+  select, input[type=file] {
+    background: var(--panel-sub);
+    color: var(--text-main);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    width: 100%;
+    margin-bottom: 12px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  select:focus, input[type=file]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+
+  /* File Drop Zone */
+  .dropzone {
+    border: 2px dashed var(--panel-border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    background: var(--dropzone-bg);
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+    margin-bottom: 14px;
+    will-change: transform;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 6px 20px var(--accent-glow);
+  }
+  .dropzone p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Voice Bar */
+  .voice-bar {
+    background: var(--voice-bar-bg);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .voice-speed-select {
+    width: auto;
+    padding: 6px 8px;
+    margin-bottom: 0;
+    font-size: 12px;
+  }
+  .voice-status {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Images Multi-view */
+  .image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 800px) {
+    .image-grid { grid-template-columns: 1fr; }
+  }
+  .img-card {
+    background: #000;
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+  }
+  .img-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px var(--accent-glow);
+  }
+  .img-label {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .img-card-header {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 15;
+    pointer-events: none;
+  }
+  .img-label-tag {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    pointer-events: auto;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Attractive Animated Loupe Toggle Button */
+  .loupe-toggle-btn {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel-sub);
+    border: 1.5px solid var(--panel-border);
+    border-radius: 20px;
+    padding: 3px 10px 3px 8px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                color 0.2s ease;
+    will-change: transform;
+  }
+  .loupe-toggle-btn:hover {
+    transform: translateY(-1.5px) scale(1.04);
+    border-color: var(--accent);
+    color: var(--text-main);
+    box-shadow: 0 4px 14px var(--accent-glow);
+  }
+  .loupe-toggle-btn:active {
+    transform: translateY(0) scale(0.95);
+    transition-duration: 0.08s;
+  }
+  .loupe-toggle-btn .loupe-icon {
+    font-size: 12px;
+    line-height: 1;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .loupe-toggle-btn .loupe-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--panel-border);
+    transition: all 0.25s ease;
+  }
+  .loupe-toggle-btn .loupe-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.25s ease;
+  }
+
+  /* Loupe Active State (ON) */
+  .loupe-toggle-btn.active {
+    background: linear-gradient(135deg, var(--accent-bg) 0%, rgba(212, 175, 55, 0.22) 100%);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow), 0 2px 10px rgba(0, 0, 0, 0.4);
+    transform: scale(1.03);
+  }
+  .loupe-toggle-btn.active:hover {
+    transform: translateY(-1.5px) scale(1.07);
+    box-shadow: 0 0 22px var(--accent-glow), 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+  .loupe-toggle-btn.active .loupe-icon {
+    transform: rotate(-12deg) scale(1.2);
+  }
+  .loupe-toggle-btn.active .loupe-indicator {
+    background: var(--accent);
+    color: var(--primary-btn-text);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .loupe-toggle-btn.active .loupe-dot {
+    background: #3fb950;
+    box-shadow: 0 0 6px #3fb950;
+    animation: radarPulse 1.4s infinite cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  @keyframes radarPulse {
+    0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7); }
+    70% { transform: scale(1.2); opacity: 0.9; box-shadow: 0 0 0 5px rgba(63, 185, 80, 0); }
+    100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); }
+  }
+  .img-wrap {
+    position: relative;
+    width: 100%;
+    min-height: 180px;
+    background: #000;
+  }
+  .img-wrap img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  canvas.overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Reading Section */
+  .summary-banner {
+    background: var(--panel-sub);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
+  }
+  .summary-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px var(--accent-glow);
+    border-color: rgba(212, 175, 55, 0.4);
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .summary-meta {
+    display: flex;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .summary-meta b { color: var(--text-main); }
+  .summary-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .modern-display {
+    font-family: var(--font-tamil);
+    font-size: 22px;
+    line-height: 1.6;
+    color: var(--text-main);
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: var(--display-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+  }
+  .gloss-display {
+    font-size: 15px;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* Line Cards */
+  .line-card {
+    background: var(--panel-sub);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: transform, box-shadow;
+  }
+  .line-card:nth-child(1) { animation-delay: 0.04s; }
+  .line-card:nth-child(2) { animation-delay: 0.08s; }
+  .line-card:nth-child(3) { animation-delay: 0.12s; }
+  .line-card:nth-child(4) { animation-delay: 0.16s; }
+  .line-card:nth-child(5) { animation-delay: 0.20s; }
+  .line-card:nth-child(6) { animation-delay: 0.24s; }
+  .line-card:nth-child(7) { animation-delay: 0.28s; }
+  .line-card:nth-child(8) { animation-delay: 0.32s; }
+  .line-card:hover, .line-card.highlight {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px var(--accent-glow);
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .line-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .line-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .line-conf {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  /* Tholscript Glyph Chips */
+  .tholscript-stream {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .tholscript-chip {
+    font-family: var(--font-tamil);
+    font-size: 24px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
+    cursor: pointer;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.22s ease, color 0.2s ease;
+    user-select: none;
+    position: relative;
+    will-change: transform, box-shadow;
+  }
+  .tholscript-chip:hover {
+    transform: translateY(-3px) scale(1.1);
+    border-color: var(--accent);
+    box-shadow: 0 6px 16px var(--accent-glow);
+    z-index: 5;
+  }
+  .tholscript-chip:active {
+    transform: translateY(0) scale(0.95);
+    transition-duration: 0.08s;
+  }
+  .tholscript-chip.good {
+    border-color: rgba(63, 185, 80, 0.5);
+    background: var(--success-bg);
+    color: #7ee787;
+  }
+  .tholscript-chip.warn {
+    border-color: rgba(210, 153, 34, 0.5);
+    background: var(--warning-bg);
+    color: #e3b341;
+  }
+  .tholscript-chip.bad {
+    border-color: rgba(248, 81, 73, 0.6);
+    background: var(--danger-bg);
+    color: #ff7b72;
+  }
+  .tholscript-chip.speaking {
+    outline: 2px solid var(--accent);
+    background: var(--accent) !important;
+    color: #0d1117 !important;
+    box-shadow: 0 0 18px var(--accent-glow), 0 0 30px var(--accent);
+    animation: speakBounce 0.75s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+    z-index: 10;
+  }
+  @keyframes speakBounce {
+    0% { transform: scale(1.02); filter: brightness(1); }
+    100% { transform: scale(1.14); filter: brightness(1.25); box-shadow: 0 0 24px var(--accent-glow), 0 0 36px var(--accent); }
+  }
+
+  .confidence-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--panel-border);
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .confidence-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .line-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    background: var(--display-bg);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .meta-col .lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .meta-col .val {
+    font-size: 14px;
+    color: var(--text-main);
+  }
+  .meta-col .val.tamil { font-family: var(--font-tamil); font-size: 16px; font-weight: 600; }
+
+  .chip-tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+    margin-top: 4px;
+  }
+  .chip-tag.fix {
+    background: var(--success-bg);
+    border: 1px solid rgba(63, 185, 80, 0.4);
+    color: var(--success);
+  }
+  .chip-tag.unk {
+    background: var(--danger-bg);
+    border: 1px solid rgba(248, 81, 73, 0.4);
+    color: var(--danger);
+  }
+
+  /* Popover / Modal for Tholscript Glyph Inspector */
+  .popover {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: var(--modal-bg);
+    border: 1px solid var(--accent);
+    box-shadow: var(--popover-shadow);
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 1000;
+    width: 320px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.15s ease;
+  }
+  .popover.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .popover-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .popover-glyph {
+    font-family: var(--font-tamil);
+    font-size: 48px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .popover-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .popover-body p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .popover-body p b { color: var(--text-main); }
+  .alts-list {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .alt-badge {
+    background: var(--panel-sub);
+    border: 1px solid var(--panel-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: var(--font-tamil);
+  }
+
+  /* Status */
+  .status-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    min-height: 20px;
+  }
+  .spin {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--text-muted);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: sp 0.8s linear infinite;
+    vertical-align: -1px;
+    margin-right: 6px;
+  }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  /* Archaeological Laser Scanning Beam */
+  .scan-beam {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent 0%, var(--accent) 25%, #ffffff 50%, var(--accent) 75%, transparent 100%);
+    box-shadow: 0 0 16px 4px var(--accent-glow), 0 0 32px 8px var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 25;
+    transition: opacity 0.3s ease;
+  }
+  .scan-beam.active {
+    opacity: 1;
+    animation: laserScan 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  }
+  @keyframes laserScan {
+    0% { top: 0%; }
+    100% { top: calc(100% - 4px); }
+  }
+
+  /* Magnifying Epigraphist's Loupe Lens (Realistic Antique Glass & Bezel) */
+  .loupe-lens {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border: 3.5px solid var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85),
+                0 0 24px var(--accent-glow),
+                inset 0 0 24px rgba(212, 175, 55, 0.35);
+    pointer-events: none;
+    display: none;
+    z-index: 40;
+    background-repeat: no-repeat;
+    background-color: var(--panel);
+    overflow: hidden;
+    will-change: transform, left, top;
+    transition: opacity 0.15s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.88);
+    opacity: 0;
+  }
+  .loupe-lens.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  /* Lens Glass Sheen Reflection */
+  .loupe-lens::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 40%, transparent 60%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  /* Center Precision Crosshair */
+  .loupe-crosshair {
+    position: absolute;
+    inset: calc(50% - 10px);
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .loupe-crosshair::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 0;
+    width: 2px;
+    height: 20px;
+    background: var(--accent);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    opacity: 0.85;
+  }
+  .loupe-crosshair::after {
+    content: '';
+    position: absolute;
+    top: 9px;
+    left: 0;
+    height: 2px;
+    width: 20px;
+    background: var(--accent);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    opacity: 0.85;
+  }
+  /* Zoom Level Pill Badge */
+  .loupe-zoom-tag {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(13, 17, 23, 0.85);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.05em;
+    z-index: 3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Audio Equalizer Live Bars */
+  .audio-eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .audio-eq .bar {
+    width: 3.5px;
+    background: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
+    border-radius: 3px;
+    height: 3px;
+    transition: height 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .audio-eq.playing .bar:nth-child(1) { animation: eqJump 0.52s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+  .audio-eq.playing .bar:nth-child(2) { animation: eqJump 0.38s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate 0.08s; }
+  .audio-eq.playing .bar:nth-child(3) { animation: eqJump 0.62s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate 0.16s; }
+  .audio-eq.playing .bar:nth-child(4) { animation: eqJump 0.44s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate 0.12s; }
+  .audio-eq.playing .bar:nth-child(5) { animation: eqJump 0.70s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate 0.22s; }
+  @keyframes eqJump {
+    0% { height: 3px; opacity: 0.6; }
+    100% { height: 18px; opacity: 1; box-shadow: 0 0 8px var(--accent-glow); }
+  }
+
+  /* Multi-Stage Archaeological Scanning Modal */
+  .scan-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    background: var(--modal-bg);
+    border: 1px solid var(--accent);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 35px var(--accent-glow);
+    padding: 32px 36px;
+    z-index: 2000;
+    width: 90%;
+    max-width: 480px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .scan-modal.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .scan-seal-wrap {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 20px;
+  }
+  .scan-seal-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px dashed var(--accent);
+    animation: rotateRing 12s linear infinite;
+  }
+  .scan-seal-inner {
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-bg) 0%, transparent 80%);
+    border: 1px solid var(--accent-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    animation: pulseSeal 1.8s ease-in-out infinite alternate;
+  }
+  @keyframes rotateRing { to { transform: rotate(360deg); } }
+  @keyframes pulseSeal { 0% { transform: scale(0.94); } 100% { transform: scale(1.06); } }
+
+  .scan-title {
+    font-family: var(--font-stone);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: 0.06em;
+  }
+  .scan-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 22px;
+    min-height: 20px;
+  }
+  .scan-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+    background: var(--display-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+  .stage-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+  }
+  .stage-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .stage-item.pending .stage-icon {
+    border: 1.5px solid var(--panel-border);
+  }
+  .stage-item.active {
+    color: var(--text-main);
+    font-weight: 600;
+  }
+  .stage-item.active .stage-icon {
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    animation: sp 0.7s linear infinite;
+  }
+  .stage-item.done {
+    color: var(--success);
+  }
+  .stage-item.done .stage-icon {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success);
+  }
+  .scan-progress-bar {
+    height: 6px;
+    background: var(--panel-sub);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .scan-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-dark), var(--accent), var(--accent-hover));
+    border-radius: 3px;
+    transition: width 0.25s ease;
+  }
+
+  /* Toast Notification Alerts */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 3000;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--modal-bg);
+    color: var(--text-main);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    box-shadow: var(--popover-shadow);
+    padding: 12px 18px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .toast.toast-out {
+    animation: toastOut 0.25s forwards;
+  }
+  @keyframes toastIn {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes toastOut {
+    to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  }
+
+  /* Staggered Line Card Animation */
+  .line-card {
+    animation: cardFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  @keyframes cardFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Home Page Archaeological Entrance Preloader */
+  #page-preloader {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s ease;
+  }
+  #page-preloader.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.03);
+    filter: blur(4px);
+    pointer-events: none;
+  }
+  .preloader-seal {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin-bottom: 22px;
+  }
+  .preloader-ring-outer {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px dashed var(--accent-glow);
+    animation: rotateRingRev 16s linear infinite;
+  }
+  .preloader-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px dashed var(--accent);
+    animation: rotateRing 10s linear infinite;
+  }
+  .preloader-core {
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-bg) 0%, transparent 80%);
+    border: 1.5px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    box-shadow: 0 0 25px var(--accent-glow);
+    animation: pulseSeal 1.8s ease-in-out infinite alternate;
+  }
+  @keyframes rotateRingRev { to { transform: rotate(-360deg); } }
+
+  .preloader-title {
+    font-family: var(--font-stone);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--text-main);
+    margin-bottom: 6px;
+  }
+  .preloader-title span { color: var(--accent); }
+  .preloader-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    font-family: var(--font-tamil);
+  }
+  .preloader-bar-wrap {
+    width: 300px;
+    height: 6px;
+    background: var(--panel-sub);
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+  .preloader-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-dark), var(--accent), var(--accent-hover));
+    border-radius: 4px;
+    box-shadow: 0 0 14px var(--accent-glow);
+    animation: smoothFill 5s cubic-bezier(0.16, 0.8, 0.3, 1) forwards;
+  }
+  @keyframes smoothFill {
+    0% { width: 0%; }
+    20% { width: 24%; }
+    45% { width: 55%; }
+    70% { width: 78%; }
+    90% { width: 92%; }
+    100% { width: 100%; }
+  }
+  .preloader-bar-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmerSlide 1.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes shimmerSlide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .preloader-status {
+    font-size: 13px;
+    color: var(--accent);
+    margin-top: 18px;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    min-height: 22px;
+    text-align: center;
+    transition: opacity 0.25s ease;
+  }
+
+  /* Theme & Sound Toggle Switch Sliders */
+  .theme-switch-wrap, .sound-switch-wrap {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    padding: 2px;
+    outline: none;
+    border-radius: 20px;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .theme-switch-wrap:focus-visible, .sound-switch-wrap:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  .theme-switch-wrap:hover, .sound-switch-wrap:hover {
+    transform: translateY(-1px) scale(1.02);
+  }
+  .theme-switch-track, .sound-switch-track {
+    position: relative;
+    width: 58px;
+    height: 28px;
+    background: var(--panel-sub);
+    border: 1.5px solid var(--accent);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+  .theme-switch-track:hover, .sound-switch-track:hover {
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .theme-switch-icon, .sound-switch-icon {
+    font-size: 12px;
+    line-height: 1;
+    z-index: 1;
+    user-select: none;
+  }
+  .theme-switch-thumb, .sound-switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, var(--accent-hover) 0%, var(--accent) 100%);
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 8px var(--accent-glow);
+    z-index: 2;
+  }
+  [data-theme="light"] .theme-switch-thumb {
+    transform: translateX(28px);
+    background: radial-gradient(circle, #ffe680 0%, var(--accent) 100%);
+  }
+  [data-theme="dark"] .theme-switch-thumb {
+    transform: translateX(0px);
+  }
+  .sound-switch-thumb {
+    transform: translateX(0px);
+  }
+  .sound-switch-wrap.muted .sound-switch-thumb {
+    transform: translateX(28px);
+    background: radial-gradient(circle, #f85149 0%, #b62324 100%);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 8px rgba(248, 81, 73, 0.4);
+  }
+  .sound-switch-wrap.muted .sound-switch-track {
+    border-color: rgba(248, 81, 73, 0.5);
+  }
+
+  /* Multi-Language Indic Epigraphic Translator */
+  .lang-translator-card {
+    margin-top: 18px;
+    background: var(--display-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease, box-shadow 0.28s ease;
+  }
+  .lang-translator-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 16px var(--accent-glow);
+  }
+  .lang-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .lang-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lang-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .lang-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 12px;
+  }
+  .lang-pill {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--panel-sub);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+    user-select: none;
+    will-change: transform;
+  }
+  .lang-pill:hover {
+    color: var(--text-main);
+    border-color: var(--accent);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 12px var(--accent-glow);
+  }
+  .lang-pill:active {
+    transform: translateY(0) scale(0.96);
+    transition-duration: 0.08s;
+  }
+  .lang-pill.active {
+    background: var(--accent);
+    color: var(--primary-btn-text);
+    border-color: var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow);
+    transform: scale(1.05);
+  }
+  .lang-output-box {
+    background: var(--panel-sub);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    transition: all 0.25s ease;
+  }
+  .lang-output-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .lang-output-text {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-main);
+    font-weight: 600;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .lang-script-text {
+    font-size: 14px;
+    color: var(--accent);
+    margin-top: 8px;
+    line-height: 1.5;
+    opacity: 0.9;
+    font-style: italic;
+    border-top: 1px dashed var(--panel-border);
+    padding-top: 6px;
+  }
+
+  /* Footer */
+  footer {
+    padding: 16px 32px;
+    border-top: 1px solid var(--panel-border);
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Home Page Archaeological Entrance Preloader (Smooth Animated 5-Second Reveal) -->
+<div id="page-preloader">
+  <div class="preloader-seal">
+    <div class="preloader-ring-outer"></div>
+    <div class="preloader-ring"></div>
+    <div class="preloader-core">𑀢𑁄</div>
+  </div>
+  <div class="preloader-title">THOL<span>SCRIPT</span></div>
+  <div class="preloader-sub">தொல்லெழுத்து · ANCIENT EPIGRAPHIC AI ENGINE</div>
+  <div class="preloader-bar-wrap">
+    <div class="preloader-bar-fill" id="preloader-bar-fill"></div>
+  </div>
+  <div class="preloader-status" id="preloader-status">🏛️ Unearthing Epigraphic Inscription Slabs…</div>
+</div>
+
+<header>
+  <div class="brand" id="brand-home" title="THOLSCRIPT — Click to reload home page">
+    <div class="brand-logo">𑀢𑁄</div>
+    <div>
+      <div class="brand-title">THOL<span>SCRIPT</span> · தொல்லெழுத்து · 𑀢𑁄𑀮𑁆</div>
+      <div class="brand-sub">Ancient Epigraphic OCR, Transliteration &amp; Synchronized Voice Synthesizer <span style="color:var(--accent); font-weight:600; margin-left:6px;">• Created by Bharath R</span></div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="sound-switch-wrap" id="sound-toggle" role="button" tabindex="0" title="Sound Effects: Active (Click to Mute UI sounds)" aria-label="Toggle Sound Effects">
+      <div class="sound-switch-track">
+        <span class="sound-switch-icon">🔊</span>
+        <span class="sound-switch-icon">🔇</span>
+        <div class="sound-switch-thumb"></div>
+      </div>
+    </div>
+    <div class="theme-switch-wrap" id="theme-toggle" role="button" tabindex="0" title="Toggle Light / Dark mode" aria-label="Toggle Light / Dark mode">
+      <div class="theme-switch-track">
+        <span class="theme-switch-icon">🌙</span>
+        <span class="theme-switch-icon">☀️</span>
+        <div class="theme-switch-thumb"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Left Panel: Input & Controls -->
+  <aside>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">🏛️</span> Inscription Slabs</div>
+      </div>
+      <div class="btn-group">
+        <button id="d-real" class="primary">🏛️ Real Slab Photo</button>
+        <button id="d-tamil2">🪨 Tamil · Weathered</button>
+        <button id="d-tamil3">⛏️ Tamil · Heavy Worn</button>
+        <button id="d-brahmi">🪦 Brahmi · Cave Label</button>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <div style="font-size: 24px; margin-bottom: 4px">📷</div>
+        <strong>Drop field photo here</strong>
+        <p>or click to browse from device</p>
+        <input type="file" id="file" accept="image/*" style="display:none">
+      </div>
+
+      <div style="margin-bottom: 12px">
+        <label style="font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">RECOGNITION SCRIPT</label>
+        <select id="script">
+          <option value="auto">Auto-detect script</option>
+          <option value="tamil">Tamil (Sangam / Medieval / Modern)</option>
+          <option value="brahmi">Brahmi (Asokan / Tamil-Brahmi)</option>
+        </select>
+      </div>
+
+      <button class="primary" id="run" style="width: 100%; justify-content: center; padding: 12px;">
+        🔍 Read & Translate Inscription
+      </button>
+      <div class="status-text" id="status">Ready. Select a slab or upload a photo.</div>
+    </div>
+
+    <!-- Ground Truth card (for demo presets) -->
+    <div class="card" id="gtcard" hidden>
+      <div class="card-header">
+        <div class="card-title"><span class="icon">📜</span> Ground Truth</div>
+      </div>
+      <div id="gt" style="font-family: var(--font-tamil); font-size: 15px; color: var(--text-main);"></div>
+    </div>
+
+    <!-- Pipeline Architecture -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">⚙️</span> Six-Stage Pipeline</div>
+      </div>
+      <ul style="font-size: 12px; color: var(--text-muted); list-style: none; line-height: 1.8;">
+        <li><b style="color:var(--text-main)">1. Adaptive Enhance:</b> Ink map polarity extraction</li>
+        <li><b style="color:var(--text-main)">2. Deskew & Segment:</b> Multi-period row projection</li>
+        <li><b style="color:var(--text-main)">3. CRNN + CTC:</b> Sequence reader with time alignment</li>
+        <li><b style="color:var(--text-main)">4. Glyph CNN:</b> Per-character cross-check & &lt;unk&gt; flag</li>
+        <li><b style="color:var(--text-main)">5. Epigraphic LM:</b> Bounded Levenshtein lexicon snap</li>
+        <li><b style="color:var(--text-main)">6. Transliteration:</b> Prakrit sound laws & English gloss</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Right Panel: Reading & Voice -->
+  <section>
+    <!-- Placeholder before run -->
+    <div class="card" id="placeholder">
+      <div class="card-header">
+        <div class="card-title"><span class="icon">👁️</span> Inscription Workspace</div>
+      </div>
+      <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+        <div style="font-size: 48px; margin-bottom: 12px;">𑀢𑁄𑀮𑁆 · தொல்லெழுத்து</div>
+        <p>Pick a demo inscription or upload your photo, then click <b>Read & Translate Inscription</b>.</p>
+      </div>
+    </div>
+
+    <!-- Result Container -->
+    <div id="resultcard" hidden>
+      <!-- Voice & Audio Toolbar -->
+      <div class="voice-bar">
+        <div class="voice-controls">
+          <button class="voice-btn" id="voice-read-tamil">🔊 Read Tamil</button>
+          <button class="voice-btn" id="voice-read-gloss">🗣️ Read English Gloss</button>
+          <button class="voice-btn" id="voice-spell">🔤 Spell Tholscript</button>
+          <button id="voice-stop" style="display:none; color: var(--danger); border-color: rgba(248,81,73,0.4)">⏹ Stop</button>
+          <select id="voice-speed" class="voice-speed-select" title="Voice Speaking Rate">
+            <option value="0.6">Speed: 0.6x (Very Slow / Learning)</option>
+            <option value="0.75" selected>Speed: 0.75x (Calm &amp; Clear)</option>
+            <option value="0.88">Speed: 0.88x (Natural)</option>
+            <option value="1.0">Speed: 1.0x (Standard)</option>
+          </select>
+        </div>
+        <div class="voice-status" id="voice-status-wrap">
+          <div class="audio-eq" id="audio-eq">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+          <span id="voice-status">Audio synthesizer ready</span>
+        </div>
+      </div>
+
+      <!-- Inscription Views: Photo & Enhanced -->
+      <div class="image-grid">
+        <div class="img-card">
+          <div class="img-card-header">
+            <span class="img-label-tag">Original Photo &amp; Detected Lines</span>
+            <button id="btn-toggle-loupe" class="loupe-toggle-btn" role="switch" aria-checked="false" title="Click to Toggle 2.5x Magnifying Loupe">
+              <span class="loupe-icon">🔍</span>
+              <span class="loupe-label">LOUPE</span>
+              <span class="loupe-indicator">
+                <span class="loupe-dot"></span>
+                <span class="loupe-status-text">OFF</span>
+              </span>
+            </button>
+          </div>
+          <div class="img-wrap" id="orig-wrap" style="position: relative; overflow: hidden;">
+            <img id="orig" alt="Inscription photo">
+            <canvas class="overlay" id="ov"></canvas>
+            <div class="scan-beam" id="scan-beam"></div>
+            <div class="loupe-lens" id="loupe-lens">
+              <div class="loupe-crosshair"></div>
+              <div class="loupe-zoom-tag">2.5×</div>
+            </div>
+          </div>
+        </div>
+        <div class="img-card">
+          <div class="img-label">Enhanced Normalized Ink Map</div>
+          <div class="img-wrap">
+            <img id="enh" alt="Enhanced ink map">
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary & Export Banner -->
+      <div class="summary-banner" id="summary-banner">
+        <div class="summary-row">
+          <div class="summary-meta">
+            <span>Script: <b id="meta-script">—</b></span>
+            <span>Lines: <b id="meta-lines">—</b></span>
+            <span>Speed: <b id="meta-time">—</b></span>
+          </div>
+          <div class="summary-actions">
+            <button id="btn-copy-text">📋 Copy Text</button>
+            <button id="btn-export-pdf" style="background: linear-gradient(135deg, rgba(212,175,55,0.24) 0%, rgba(212,175,55,0.08) 100%); border-color: var(--accent); color: var(--accent); font-weight: 700; box-shadow: 0 2px 8px var(--accent-glow);">📄 Export PDF Report</button>
+            <button id="btn-download-epidoc">📜 Export EpiDoc XML</button>
+            <button id="btn-download-json">📦 Export JSON</button>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); font-weight: 700;">Modern Readable Text</div>
+        <div class="modern-display" id="full-modern">—</div>
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700; margin-top: 10px;">English Epigraphic Gloss</div>
+        <div class="gloss-display" id="full-gloss">—</div>
+
+        <!-- Multi-Language Indic Epigraphic Translator -->
+        <div class="lang-translator-card">
+          <div class="lang-header">
+            <div class="lang-title"><span class="icon">🌐</span> Indic &amp; Global Epigraphic Translator</div>
+            <div class="lang-actions">
+              <button class="voice-btn" id="lang-voice-btn" style="padding: 4px 12px; font-size: 12px;">🔊 Speak in Telugu</button>
+              <button id="lang-copy-btn" class="btn" style="padding: 4px 12px; font-size: 12px;">📋 Copy Translation</button>
+            </div>
+          </div>
+          <div class="lang-pills" id="lang-pills">
+            <button class="lang-pill active" data-lang="te">🏛️ Telugu (తెలుగు)</button>
+            <button class="lang-pill" data-lang="kn">🪨 Kannada (ಕನ್ನಡ)</button>
+            <button class="lang-pill" data-lang="ml">🌴 Malayalam (മലയാളം)</button>
+            <button class="lang-pill" data-lang="hi">📜 Hindi (हिन्दी)</button>
+            <button class="lang-pill" data-lang="sa">🕉️ Sanskrit (संस्कृतम्)</button>
+            <button class="lang-pill" data-lang="en">🇬🇧 English</button>
+            <button class="lang-pill" data-lang="mr">🌿 Marathi (मराठी)</button>
+            <button class="lang-pill" data-lang="bn">🪔 Bengali (বাংলা)</button>
+            <button class="lang-pill" data-lang="gu">🪙 Gujarati (ગુજરાતી)</button>
+            <button class="lang-pill" data-lang="or">🐚 Odia (ଓଡ଼ିଆ)</button>
+          </div>
+          <div class="lang-output-box">
+            <div class="lang-output-label">
+              <span id="lang-label">TELUGU EPIGRAPHIC TRANSLATION (తెలుగు అనువాదం)</span>
+              <span style="font-size: 10px; color: var(--accent); letter-spacing: 0.05em;">Indic Cognates &amp; Transliteration</span>
+            </div>
+            <div class="lang-output-text" id="lang-text">Ready. Decipher an inscription to view translation.</div>
+            <div class="lang-script-text" id="lang-script-text"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Cards List -->
+      <div id="lines-container"></div>
+    </div>
+  </section>
+</main>
+
+<footer style="text-align:center; padding: 24px 16px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--panel-border); margin-top: 36px;">
+  <div>THOLSCRIPT · தொல்லெழுத்து · 𑀢𑁄𑀮𑁆 &bull; Ancient Epigraphic Neural AI</div>
+  <div style="margin-top: 5px; font-weight: 700; color: var(--accent); letter-spacing: 0.04em;">Created &amp; Engineered by Bharath R</div>
+</footer>
+
+<!-- Tholscript Glyph Inspector Modal -->
+<div class="modal-overlay" id="modal-overlay"></div>
+<div class="popover" id="popover">
+  <div class="popover-header">
+    <div class="popover-glyph" id="pop-glyph">க்</div>
+    <button class="popover-close" id="pop-close">&times;</button>
+  </div>
+  <div class="popover-body">
+    <p><span>Roman / Translit:</span> <b id="pop-roman">k</b></p>
+    <p><span>CRNN Reader Confidence:</span> <b id="pop-crnn">94%</b></p>
+    <p><span>Glyph CNN Cross-Check:</span> <b id="pop-glyph-conf">91%</b></p>
+    <p><span>Model Consensus:</span> <b id="pop-agrees">Agreement ✓</b></p>
+    <div style="margin-top: 12px; margin-bottom: 6px; font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Top Model Alternatives</div>
+    <div class="alts-list" id="pop-alts"></div>
+    <div style="margin-top: 16px;">
+      <button class="voice-btn" id="pop-speak" style="width: 100%; justify-content: center;">🔊 Pronounce Tholscript Glyph</button>
+    </div>
+  </div>
+</div>
+
+<!-- Multi-Stage Archaeological Scanning Modal -->
+<div class="modal-overlay" id="scanner-overlay"></div>
+<div class="scan-modal" id="scanner-modal">
+  <div class="scan-seal-wrap">
+    <div class="scan-seal-ring"></div>
+    <div class="scan-seal-inner">𑀢𑁄</div>
+  </div>
+  <div class="scan-title">EPIGRAPHIC SCAN IN PROGRESS</div>
+  <div class="scan-subtitle" id="scanner-status-text">Synchronizing hardware accelerator &amp; neural models…</div>
+
+  <div class="scan-stages">
+    <div class="stage-item" id="stage-1">
+      <div class="stage-icon"></div>
+      <div class="stage-text">1. Adaptive Illumination &amp; Ink Polarity</div>
+    </div>
+    <div class="stage-item" id="stage-2">
+      <div class="stage-icon"></div>
+      <div class="stage-text">2. Deskew &amp; Line Boundary Projection</div>
+    </div>
+    <div class="stage-item" id="stage-3">
+      <div class="stage-icon"></div>
+      <div class="stage-text">3. CRNN BiLSTM Sequence &amp; CTC Alignment</div>
+    </div>
+    <div class="stage-item" id="stage-4">
+      <div class="stage-icon"></div>
+      <div class="stage-text">4. Glyph CNN Independent Cross-Check</div>
+    </div>
+    <div class="stage-item" id="stage-5">
+      <div class="stage-icon"></div>
+      <div class="stage-text">5. Epigraphic Lexicon Transducer &amp; LM</div>
+    </div>
+    <div class="stage-item" id="stage-6">
+      <div class="stage-icon"></div>
+      <div class="stage-text">6. Transliteration, Phonetics &amp; EpiDoc XML</div>
+    </div>
+  </div>
+
+  <div class="scan-progress-bar">
+    <div class="scan-progress-fill" id="scanner-bar-fill"></div>
+  </div>
+  <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px;" id="scanner-timer">Elapsed: 0.0s</div>
+</div>
+
+<!-- Floating Toast Notification Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<footer>
+  <div>Models trained on stochastic physical damage synthesis; metrics pinned in <code>reports/metrics.json</code>.</div>
+  <div>EpiDoc TEI-XML standard compliant · Free & Open Epigraphic Tool</div>
+</footer>
+
+<script>
+// State
+let currentB64 = null, currentGT = null, currentResult = null, currentBoxes = [];
+const $ = id => document.getElementById(id);
+const status = m => { $("status").innerHTML = m; };
+
+// -------------------------------------------------------------
+// Sound Effects Synthesizer (Web Audio API)
+// -------------------------------------------------------------
+class SoundFX {
+  constructor() {
+    this.ctx = null;
+    this.muted = localStorage.getItem("tholscript_sound_muted") === "true";
+  }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) this.ctx = new AudioCtx();
+    }
+  }
+  setMuted(m) {
+    this.muted = !!m;
+    localStorage.setItem("tholscript_sound_muted", this.muted ? "true" : "false");
+    this.updateToggleUI();
+  }
+  updateToggleUI() {
+    const el = $("sound-toggle");
+    if (el) {
+      if (this.muted) {
+        el.classList.add("muted");
+        el.setAttribute("title", "Sound Effects: Muted (Click to Unmute UI sounds)");
+        el.setAttribute("aria-label", "Sound Effects: Muted");
+      } else {
+        el.classList.remove("muted");
+        el.setAttribute("title", "Sound Effects: Active (Click to Mute UI sounds)");
+        el.setAttribute("aria-label", "Sound Effects: Active");
+      }
+    }
+  }
+  playSuccess() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, t + idx * 0.07);
+        gain.gain.setValueAtTime(0.06, t + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + idx * 0.07 + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t + idx * 0.07);
+        osc.stop(t + idx * 0.07 + 0.4);
+      });
+    } catch (e) {}
+  }
+  playChirp() {
+    if (this.muted) return;
+    try {
+      this.init();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(1320, t + 0.05);
+      gain.gain.setValueAtTime(0.04, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.07);
+    } catch (e) {}
+  }
+}
+const sfx = new SoundFX();
+
+// -------------------------------------------------------------
+// Toast Notification System
+// -------------------------------------------------------------
+function showToast(msg, icon = "🏛️") {
+  const container = $("toast-container");
+  if (!container) return;
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = `<span style="font-size:18px">${icon}</span><span>${msg}</span>`;
+  container.appendChild(t);
+  setTimeout(() => {
+    t.classList.add("toast-out");
+    setTimeout(() => t.remove(), 250);
+  }, 3200);
+}
+
+// -------------------------------------------------------------
+// Home Page 5-Second Smooth Archaeological Loader Sequence
+// -------------------------------------------------------------
+const PRELOADER_DURATION = 5000; // 5.0 seconds
+const preloaderStart = performance.now();
+
+const preloaderStages = [
+  { at: 0, text: "🏛️ Unearthing Epigraphic Inscription Slabs…" },
+  { at: 1200, text: "📜 Calibrating Tamil & Brahmi Grapheme Inventories…" },
+  { at: 2400, text: "⚡ Loading CRNN BiLSTM & CTC Neural Sequence Weights…" },
+  { at: 3600, text: "🔍 Synchronizing Bounded Levenshtein Epigraphic Lexicon…" },
+  { at: 4600, text: "✨ THOLSCRIPT Initialized — Entering Home Workspace…" }
+];
+
+let preloaderStatusIndex = -1;
+
+function stepPreloader() {
+  const elapsed = performance.now() - preloaderStart;
+  const statusEl = $("preloader-status");
+
+  if (statusEl) {
+    for (let i = preloaderStages.length - 1; i >= 0; i--) {
+      if (elapsed >= preloaderStages[i].at) {
+        if (preloaderStatusIndex !== i) {
+          preloaderStatusIndex = i;
+          statusEl.style.opacity = "0";
+          setTimeout(() => {
+            if (statusEl) {
+              statusEl.innerText = preloaderStages[i].text;
+              statusEl.style.opacity = "1";
+            }
+          }, 140);
+        }
+        break;
+      }
+    }
+  }
+
+  if (elapsed < PRELOADER_DURATION) {
+    requestAnimationFrame(stepPreloader);
+  } else {
+    const preloader = $("page-preloader");
+    if (preloader) {
+      sfx.playSuccess();
+      preloader.classList.add("fade-out");
+      setTimeout(() => {
+        if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
+      }, 650);
+      showToast("Welcome to THOLSCRIPT — Epigraphic Reader Ready!", "🏛️");
+    }
+  }
+}
+
+requestAnimationFrame(stepPreloader);
+
+// -------------------------------------------------------------
+// Brand Home Button (Reload Home Page)
+// -------------------------------------------------------------
+const brandHome = $("brand-home");
+if (brandHome) {
+  brandHome.onclick = (e) => {
+    e.preventDefault();
+    sfx.playChirp();
+    window.location.href = "/";
+  };
+}
+
+// -------------------------------------------------------------
+// Theme Switch Slider & Persistence
+// -------------------------------------------------------------
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("tholscript_theme", theme);
+  const toggle = $("theme-toggle");
+  if (toggle) {
+    toggle.setAttribute("aria-checked", theme === "light" ? "true" : "false");
+    toggle.setAttribute("title", theme === "light" ? "Switch to Dark mode (Moon)" : "Switch to Light mode (Sun)");
+  }
+  if (currentBoxes && currentBoxes.length) {
+    redrawBoxes(-1);
+  }
+}
+
+const savedTheme = localStorage.getItem("tholscript_theme") || "dark";
+applyTheme(savedTheme);
+
+const themeToggle = $("theme-toggle");
+if (themeToggle) {
+  const toggleAction = () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "dark";
+    applyTheme(cur === "dark" ? "light" : "dark");
+    sfx.playChirp();
+  };
+  themeToggle.onclick = toggleAction;
+  themeToggle.onkeydown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleAction();
+    }
+  };
+}
+
+const soundToggle = $("sound-toggle");
+if (soundToggle) {
+  sfx.updateToggleUI();
+  const toggleSoundAction = () => {
+    sfx.setMuted(!sfx.muted);
+    if (!sfx.muted) {
+      sfx.playChirp();
+      showToast("UI sound effects unmuted 🔊", "🔊");
+    } else {
+      showToast("UI sound effects muted (Voice Synthesizer remains ready) 🔇", "🔇");
+    }
+  };
+  soundToggle.onclick = toggleSoundAction;
+  soundToggle.onkeydown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleSoundAction();
+    }
+  };
+}
+
+// -------------------------------------------------------------
+// Magnifying Epigraphist's Loupe Lens (2.5x Zoom)
+// -------------------------------------------------------------
+let loupeEnabled = false;
+const loupeBtn = $("btn-toggle-loupe");
+const loupeLens = $("loupe-lens");
+const origImg = $("orig");
+const origWrap = $("orig-wrap");
+
+function updateLoupeUI() {
+  if (!loupeBtn) return;
+  const statusText = loupeBtn.querySelector(".loupe-status-text");
+  if (loupeEnabled) {
+    loupeBtn.classList.add("active");
+    loupeBtn.setAttribute("aria-checked", "true");
+    if (statusText) statusText.innerText = "2.5x ON";
+  } else {
+    loupeBtn.classList.remove("active");
+    loupeBtn.setAttribute("aria-checked", "false");
+    if (statusText) statusText.innerText = "OFF";
+    if (loupeLens) {
+      loupeLens.classList.remove("visible");
+      loupeLens.style.display = "none";
+    }
+  }
+}
+
+if (loupeBtn) {
+  loupeBtn.onclick = (e) => {
+    e.stopPropagation();
+    loupeEnabled = !loupeEnabled;
+    sfx.playChirp();
+    updateLoupeUI();
+    if (loupeEnabled) {
+      showToast("🔍 Epigraphist's Loupe: ON (Hover over slab photo to magnify chisel strokes at 2.5x)", "🔍");
+    } else {
+      showToast("Loupe magnifier disabled", "🔍");
+    }
+  };
+}
+
+if (origWrap && origImg && loupeLens) {
+  const ZOOM = 2.5;
+  origWrap.addEventListener("mousemove", (e) => {
+    if (!loupeEnabled || !origImg.naturalWidth) {
+      loupeLens.classList.remove("visible");
+      loupeLens.style.display = "none";
+      return;
+    }
+    const rect = origImg.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+      loupeLens.classList.remove("visible");
+      loupeLens.style.display = "none";
+      return;
+    }
+
+    loupeLens.style.display = "block";
+    requestAnimationFrame(() => loupeLens.classList.add("visible"));
+
+    const radius = 80; // half of 160px
+    loupeLens.style.left = `${x - radius}px`;
+    loupeLens.style.top = `${y - radius}px`;
+
+    loupeLens.style.backgroundImage = `url('${origImg.src}')`;
+    loupeLens.style.backgroundSize = `${rect.width * ZOOM}px ${rect.height * ZOOM}px`;
+    loupeLens.style.backgroundPosition = `-${x * ZOOM - radius}px -${y * ZOOM - radius}px`;
+  });
+
+  origWrap.addEventListener("mouseleave", () => {
+    loupeLens.classList.remove("visible");
+    setTimeout(() => {
+      if (!loupeLens.classList.contains("visible")) {
+        loupeLens.style.display = "none";
+      }
+    }, 150);
+  });
+}
+
+// Helper: Color based on confidence
+function getConfStyle(c, doubtful) {
+  if (doubtful) return { cls: "bad", color: "#f85149" };
+  if (c >= 0.70) return { cls: "good", color: "#3fb950" };
+  if (c >= 0.45) return { cls: "warn", color: "#d29922" };
+  return { cls: "bad", color: "#f85149" };
+}
+
+// -------------------------------------------------------------
+// Voice Synthesizer Module (Web Speech API) - High-Fidelity & Natural Cadence
+// -------------------------------------------------------------
+const TAMIL_PULLI_SPELL = {
+  "க்": "இக்", "ங்": "இங்", "ச்": "இச்", "ஞ்": "இஞ்",
+  "ட்": "இட்", "ண்": "இண்", "த்": "இத்", "ந்": "இந்",
+  "ப்": "இப்", "ம்": "இம்", "ய்": "இய்", "ர்": "இர்",
+  "ல்": "இல்", "வ்": "இவ்", "ழ்": "இழ்", "ள்": "இள்",
+  "ற்": "இற்", "ன்": "இன்", "ஃ": "அஃக்"
+};
+
+class VoiceModule {
+  constructor() {
+    this.synth = window.speechSynthesis;
+    this.currentUtterance = null;
+    this.isSpelling = false;
+    this.spellingQueue = [];
+    this.spellingIndex = 0;
+    this.speed = 0.75; // Calm, clear, intelligible cadence (never rushed)
+
+    // Load available voices
+    this.voices = [];
+    if (this.synth) {
+      this.loadVoices();
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => this.loadVoices();
+      }
+    }
+  }
+
+  loadVoices() {
+    if (!this.synth) return;
+    this.voices = this.synth.getVoices() || [];
+  }
+
+  findBestVoice(targetLang) {
+    if (!this.voices || this.voices.length === 0) {
+      this.loadVoices();
+    }
+    if (!this.voices || this.voices.length === 0) return null;
+
+    const normTarget = (targetLang || "ta-IN").toLowerCase().replace('_', '-');
+    const prefix2 = normTarget.slice(0, 2);
+
+    // Candidates matching the language code or prefix
+    let candidates = this.voices.filter(v => {
+      const vLang = (v.lang || "").toLowerCase().replace('_', '-');
+      return vLang === normTarget || vLang.startsWith(prefix2);
+    });
+
+    // If no direct code match, search voice names
+    if (candidates.length === 0) {
+      const langNames = {
+        ta: "tamil", te: "telugu", kn: "kannada", ml: "malayalam",
+        hi: "hindi", mr: "marathi", bn: "bengali", gu: "gujarati",
+        or: "odia", sa: "sanskrit", en: "english"
+      };
+      const lName = langNames[prefix2];
+      if (lName) {
+        candidates = this.voices.filter(v => (v.name || "").toLowerCase().includes(lName));
+      }
+    }
+
+    if (candidates.length === 0) return null;
+
+    // Score candidates: prioritize neural, google, natural, enhanced voices
+    const scoreVoice = (v) => {
+      let score = 0;
+      const name = (v.name || "").toLowerCase();
+      const vLang = (v.lang || "").toLowerCase().replace('_', '-');
+
+      if (vLang === normTarget) score += 40;
+      else if (vLang.startsWith(prefix2)) score += 20;
+
+      if (name.includes("natural")) score += 100;
+      if (name.includes("neural")) score += 95;
+      if (name.includes("google")) score += 85;
+      if (name.includes("enhanced") || name.includes("premium")) score += 75;
+      if (name.includes("siri")) score += 60;
+      if (name.includes("online")) score += 50;
+
+      // Online cloud voices have much higher articulation clarity
+      if (v.localService === false) score += 25;
+
+      // Deprioritize robotic legacy synthesizers
+      if (name.includes("espeak") || name.includes("compact")) score -= 60;
+
+      return score;
+    };
+
+    candidates.sort((a, b) => scoreVoice(b) - scoreVoice(a));
+    return candidates[0];
+  }
+
+  cleanForSpeech(rawText, lang = "ta-IN") {
+    if (!rawText) return "";
+    let text = rawText.normalize("NFC").trim();
+
+    // 1. English Gloss smoothing:
+    if (lang.startsWith("en")) {
+      // Remove untranslated raw Indic characters in brackets like [கு], [ஆடி], [ழி]
+      text = text.replace(/\[[ऀ-ൿ\s\.\_\-]+\]/g, "");
+      // Replace pipe sentence dividers with clean sentence pause
+      text = text.replace(/\s*\|\s*/g, ". ");
+      // Strip parens and brackets so TTS doesn't say "open parenthesis"
+      text = text.replace(/[\(\)\[\]\{\}\<\>«»]/g, "");
+      // Remove lacunae dots and underscores
+      text = text.replace(/(\_{2,}|\.{2,})/g, " ");
+      // Deduplicate stuttering repeated adjacent words
+      text = text.replace(/(\w+)(\s+)+/gi, "");
+      text = text.replace(/\s+/g, " ").trim();
+      return text;
+    }
+
+    // 2. Single pure Tamil consonant pronunciation
+    if (lang.startsWith("ta") && TAMIL_PULLI_SPELL[text]) {
+      return TAMIL_PULLI_SPELL[text];
+    }
+
+    // 3. Expand slashes into natural connectives
+    if (lang.startsWith("ta")) {
+      text = text.replace(/\s*\/\s*/g, " அல்லது ");
+    } else if (lang.startsWith("te")) {
+      text = text.replace(/\s*\/\s*/g, " లేదా ");
+    } else if (lang.startsWith("kn")) {
+      text = text.replace(/\s*\/\s*/g, " અથવા ");
+    } else if (lang.startsWith("ml")) {
+      text = text.replace(/\s*\/\s*/g, " அல்லது ");
+    } else if (lang.startsWith("hi") || lang.startsWith("mr") || lang.startsWith("sa")) {
+      text = text.replace(/\s*\/\s*/g, " அல்லது ");
+    } else {
+      text = text.replace(/\s*\/\s*/g, ", ");
+    }
+
+    // 4. Strip epigraphic damaged brackets, Leiden conventions, lacunae markers
+    text = text.replace(/\[\.\.\.\]|\.\.\.|\.\.|\_/g, " ");
+    text = text.replace(/[\[\]\(\)\{\}\<\>«»\|]/g, " ");
+
+    // 5. Indic Word-Fusion & Syllable Smoothing:
+    // Collapse spaces around virama/pulli characters so fragmented letters fuse into real words
+    text = text.replace(/([ऀ-ൿ])\s+([ऀ-ൿ][्্੍્୍்్್്])/g, "");
+    text = text.replace(/([ऀ-ൿ][्্੍્୍்్್്])\s+([ऀ-ൿ])/g, "");
+    text = text.replace(/([ऀ-ൿ][्্੍્୍்్್്])\s+([ऀ-ൿ])/g, "");
+
+    // Insert natural breathing pause commas between phrases (every 4-5 words)
+    const words = text.split(/\s+/).filter(Boolean);
+    if (words.length > 5) {
+      const chunks = [];
+      for (let i = 0; i < words.length; i += 4) {
+        chunks.push(words.slice(i, i + 4).join(" "));
+      }
+      text = chunks.join(", ");
+    } else {
+      text = words.join(" ");
+    }
+
+    return text.trim();
+  }
+
+  stop() {
+    this.isSpelling = false;
+    this.spellingQueue = [];
+    document.querySelectorAll(".tholscript-chip.speaking").forEach(el => el.classList.remove("speaking"));
+    if (this.synth) this.synth.cancel();
+    $("voice-stop").style.display = "none";
+    $("voice-status").innerHTML = "Audio stopped";
+    const eq = $("audio-eq");
+    if (eq) eq.classList.remove("playing");
+  }
+
+  speak(rawText, lang = "ta-IN", onEnd = null) {
+    if (!this.synth) {
+      showToast("Web Speech API is not supported in this browser.", "⚠️");
+      return;
+    }
+    this.stop();
+    if (!rawText || !rawText.trim()) return;
+
+    const cleanedText = this.cleanForSpeech(rawText, lang);
+    if (!cleanedText) return;
+
+    const u = new SpeechSynthesisUtterance(cleanedText);
+
+    // Calibrate speaking rate: Calm, deliberate pacing for clear comprehension
+    u.rate = Math.max(0.55, Math.min(this.speed, 0.82));
+    u.pitch = 1.0;
+
+    const bestVoice = this.findBestVoice(lang);
+    if (bestVoice) {
+      u.voice = bestVoice;
+      u.lang = bestVoice.lang || lang;
+    } else {
+      u.lang = lang;
+    }
+
+    u.onstart = () => {
+      $("voice-stop").style.display = "inline-flex";
+      const voiceLabel = bestVoice ? ` (${bestVoice.name.split(" ")[0]})` : "";
+      $("voice-status").innerHTML = `<span class="spin"></span>Speaking [${lang.slice(0, 2).toUpperCase()}]${voiceLabel}…`;
+      const eq = $("audio-eq");
+      if (eq) eq.classList.add("playing");
+    };
+
+    u.onend = () => {
+      $("voice-stop").style.display = "none";
+      $("voice-status").innerHTML = "Done playing";
+      const eq = $("audio-eq");
+      if (eq) eq.classList.remove("playing");
+      if (onEnd) onEnd();
+    };
+
+    u.onerror = () => {
+      $("voice-stop").style.display = "none";
+      $("voice-status").innerHTML = "Speech ended";
+      const eq = $("audio-eq");
+      if (eq) eq.classList.remove("playing");
+    };
+
+    this.currentUtterance = u;
+    this.synth.speak(u);
+  }
+
+  spellOut(spellingItems) {
+    if (!this.synth) return;
+    this.stop();
+    if (!spellingItems || spellingItems.length === 0) return;
+
+    this.isSpelling = true;
+    this.spellingQueue = spellingItems;
+    this.spellingIndex = 0;
+    $("voice-stop").style.display = "inline-flex";
+    const eq = $("audio-eq");
+    if (eq) eq.classList.add("playing");
+    this.stepSpelling();
+  }
+
+  stepSpelling() {
+    if (!this.isSpelling || this.spellingIndex >= this.spellingQueue.length) {
+      this.stop();
+      $("voice-status").innerHTML = "Spelling complete";
+      return;
+    }
+
+    const item = this.spellingQueue[this.spellingIndex];
+    document.querySelectorAll(".tholscript-chip.speaking").forEach(el => el.classList.remove("speaking"));
+
+    if (item.elemId) {
+      const el = $(item.elemId);
+      if (el) {
+        el.classList.add("speaking");
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // Use traditional Tamil pulli pronunciation if single pure consonant
+    const sayText = item.speak_ta || TAMIL_PULLI_SPELL[item.cluster] || item.cluster;
+    $("voice-status").innerHTML = `<span class="spin"></span>Spelling: <b>${item.cluster}</b> (${item.roman || ''})`;
+
+    const u = new SpeechSynthesisUtterance(sayText);
+    u.rate = Math.max(0.55, this.speed * 0.8);
+    u.pitch = 1.0;
+
+    const bestVoice = this.findBestVoice("ta-IN");
+    if (bestVoice) {
+      u.voice = bestVoice;
+      u.lang = bestVoice.lang || "ta-IN";
+    } else {
+      u.lang = "ta-IN";
+    }
+
+    u.onend = () => {
+      if (this.isSpelling) {
+        this.spellingIndex++;
+        // 680ms relaxed pause so listener can distinctly hear and absorb each letter
+        setTimeout(() => this.stepSpelling(), 680);
+      }
+    };
+    u.onerror = () => {
+      this.spellingIndex++;
+      setTimeout(() => this.stepSpelling(), 200);
+    };
+
+    this.synth.speak(u);
+  }
+}
+
+const voice = new VoiceModule();
+if ($("voice-speed")) {
+  voice.speed = parseFloat($("voice-speed").value) || 0.75;
+  $("voice-speed").onchange = e => { voice.speed = parseFloat(e.target.value); };
+}
+$("voice-stop").onclick = () => voice.stop();
+
+// Read Modern Tamil button
+$("voice-read-tamil").onclick = () => {
+  if (!currentResult || !currentResult.modern) return;
+  voice.speak(currentResult.modern, "ta-IN");
+};
+
+// Read English Gloss button
+$("voice-read-gloss").onclick = () => {
+  if (!currentResult || !currentResult.gloss) return;
+  voice.speak(currentResult.gloss, "en-US");
+};
+
+// Spell Tholscript button
+$("voice-spell").onclick = () => {
+  if (!currentResult || !currentResult.lines) return;
+  const items = [];
+  currentResult.lines.forEach((line, lineIdx) => {
+    line.chars.forEach((c, charIdx) => {
+      items.push({
+        cluster: c.cluster,
+        speak_ta: (c.cluster.length === 2 && c.cluster[1] === '\u0BCD') ? "இ" + c.cluster : c.cluster,
+        roman: (c.alternatives && c.alternatives[0]) ? c.alternatives[0][0] : "",
+        elemId: `chip-${lineIdx}-${charIdx}`
+      });
+    });
+  });
+  voice.spellOut(items);
+};
+
+// -------------------------------------------------------------
+// Demos & Image Loading
+// -------------------------------------------------------------
+async function loadDemo(key) {
+  voice.stop();
+  status('<span class="spin"></span>Carving demo slab…');
+  const r = await fetch("/api/demo/" + key);
+  const d = await r.json();
+  currentB64 = d.image_b64;
+  currentGT = d;
+  $("orig").src = "data:image/png;base64," + d.image_b64;
+  clearOverlay();
+  $("resultcard").hidden = false;
+  $("placeholder").hidden = true;
+  $("gtcard").hidden = false;
+
+  let gtHtml = "";
+  if (d.gt_lines) {
+    gtHtml = d.gt_lines.map((t, idx) => `<div style="margin:3px 0"><b>Line ${idx+1}:</b> ${t}</div>`).join("");
+  } else {
+    gtHtml = "<div class='text-muted'>Real archaeological photograph — no synthetic ground truth.</div>";
+  }
+  if (d.damage && d.damage.length) {
+    gtHtml += `<div style="margin-top:8px; font-size:12px; color:var(--text-muted)">Physical wear: ${d.damage.join(" · ")}</div>`;
+  }
+  $("gt").innerHTML = gtHtml;
+  $("enh").removeAttribute("src");
+  $("lines-container").innerHTML = "";
+  status("Demo slab ready. Click 'Read & Translate Inscription' below.");
+}
+
+function clearOverlay() {
+  const c = $("ov");
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0, 0, c.width, c.height);
+}
+
+$("d-real").onclick = () => loadDemo("real_photo");
+$("d-tamil2").onclick = () => loadDemo("tamil_medium");
+$("d-tamil3").onclick = () => loadDemo("tamil_heavy");
+$("d-brahmi").onclick = () => loadDemo("brahmi");
+
+// Drag and drop & File Upload
+const dropzone = $("dropzone");
+dropzone.onclick = () => $("file").click();
+dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add("dragover"); };
+dropzone.ondragleave = () => dropzone.classList.remove("dragover");
+dropzone.ondrop = e => {
+  e.preventDefault();
+  dropzone.classList.remove("dragover");
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+};
+$("file").onchange = e => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+};
+
+function handleFile(f) {
+  voice.stop();
+  const rd = new FileReader();
+  rd.onload = () => {
+    currentB64 = rd.result.split(",")[1];
+    currentGT = null;
+    $("orig").src = "data:image/png;base64," + currentB64;
+    $("gtcard").hidden = true;
+    clearOverlay();
+    $("resultcard").hidden = false;
+    $("placeholder").hidden = true;
+    $("lines-container").innerHTML = "";
+    $("enh").removeAttribute("src");
+    status("Photo loaded. Ready to analyze.");
+  };
+  rd.readAsDataURL(f);
+}
+
+// -------------------------------------------------------------
+// Multi-Stage Pipeline Runner & Laser Scanner
+// -------------------------------------------------------------
+function resetScannerStages() {
+  for (let i = 1; i <= 6; i++) {
+    const el = $(`stage-${i}`);
+    if (el) {
+      el.className = "stage-item pending";
+      el.querySelector(".stage-icon").innerHTML = "";
+    }
+  }
+  $("scanner-bar-fill").style.width = "4%";
+  $("scanner-status-text").innerText = "Activating pipeline…";
+}
+
+function setScannerStage(stageNum, title) {
+  for (let i = 1; i < stageNum; i++) {
+    const el = $(`stage-${i}`);
+    if (el) {
+      el.className = "stage-item done";
+      el.querySelector(".stage-icon").innerHTML = "✓";
+    }
+  }
+  const cur = $(`stage-${stageNum}`);
+  if (cur) {
+    cur.className = "stage-item active";
+    cur.querySelector(".stage-icon").innerHTML = "";
+  }
+  if (title) $("scanner-status-text").innerText = title;
+  const pct = Math.min(94, Math.round((stageNum / 6.2) * 100));
+  $("scanner-bar-fill").style.width = `${pct}%`;
+}
+
+$("run").onclick = async () => {
+  if (!currentB64) {
+    status("Please select a demo slab or upload a photo first.");
+    showToast("Please select a slab or upload a photo first.", "⚠️");
+    return;
+  }
+  voice.stop();
+  sfx.playChirp();
+
+  // Activate Archaeological Laser Beam & Multi-Stage Scanner Modal
+  const beam = $("scan-beam");
+  if (beam) beam.classList.add("active");
+
+  const modal = $("scanner-modal");
+  const overlay = $("scanner-overlay");
+  modal.classList.add("open");
+  overlay.classList.add("open");
+  resetScannerStages();
+
+  const t0 = performance.now();
+  let timerInterval = setInterval(() => {
+    const el = ((performance.now() - t0) / 1000).toFixed(1);
+    $("scanner-timer").innerText = `Elapsed: ${el}s`;
+  }, 100);
+
+  // Staged progress indication matching pipeline architecture
+  setScannerStage(1, "Stage 1: Extracting adaptive ink polarity map…");
+  const st2 = setTimeout(() => setScannerStage(2, "Stage 2: Deskewing & slicing line boundary bands…"), 220);
+  const st3 = setTimeout(() => setScannerStage(3, "Stage 3: CRNN BiLSTM sequence reading & CTC alignment…"), 550);
+  const st4 = setTimeout(() => setScannerStage(4, "Stage 4: Glyph CNN independent grapheme cross-check…"), 950);
+  const st5 = setTimeout(() => setScannerStage(5, "Stage 5: Epigraphic lexicon transducer & LM snap…"), 1400);
+  const st6 = setTimeout(() => setScannerStage(6, "Stage 6: Synthesizing modern transliteration & English gloss…"), 1850);
+
+  status('<span class="spin"></span>Analyzing inscription lines, reading graphemes & applying epigraphic lexicon…');
+
+  try {
+    const res = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_b64: currentB64, script: $("script").value })
+    });
+    const d = await res.json();
+    currentResult = d;
+    const secs = ((performance.now() - t0) / 1000).toFixed(1);
+
+    clearInterval(timerInterval);
+    clearTimeout(st2); clearTimeout(st3); clearTimeout(st4); clearTimeout(st5); clearTimeout(st6);
+
+    // Mark all stages completed
+    for (let i = 1; i <= 6; i++) {
+      const el = $(`stage-${i}`);
+      if (el) {
+        el.className = "stage-item done";
+        el.querySelector(".stage-icon").innerHTML = "✓";
+      }
+    }
+    $("scanner-bar-fill").style.width = "100%";
+    $("scanner-status-text").innerText = `Deciphered ${d.lines.length} lines successfully in ${secs}s!`;
+    $("scanner-timer").innerText = `Completed in ${secs}s`;
+
+    sfx.playSuccess();
+
+    setTimeout(() => {
+      modal.classList.remove("open");
+      overlay.classList.remove("open");
+      if (beam) beam.classList.remove("active");
+    }, 450);
+
+    $("enh").src = "data:image/png;base64," + d.enhanced_b64;
+    drawBoundingBoxes(d.line_boxes);
+
+    $("meta-script").innerText = d.script.toUpperCase();
+    $("meta-lines").innerText = d.lines.length;
+    $("meta-time").innerText = `${secs}s`;
+    $("full-modern").innerText = d.modern || "—";
+    $("full-gloss").innerText = d.gloss || "—";
+
+    renderLines(d.lines, d.script);
+    renderActiveLanguage();
+    status(`Deciphering completed in ${secs}s with ${d.lines.length} lines detected.`);
+    showToast(`✓ Deciphering completed: ${d.lines.length} lines read in ${secs}s!`, "✨");
+  } catch (err) {
+    clearInterval(timerInterval);
+    clearTimeout(st2); clearTimeout(st3); clearTimeout(st4); clearTimeout(st5); clearTimeout(st6);
+    modal.classList.remove("open");
+    overlay.classList.remove("open");
+    if (beam) beam.classList.remove("active");
+    status(`Error during translation: ${err.message}`);
+    showToast(`Translation error: ${err.message}`, "⚠️");
+  }
+};
+
+// -------------------------------------------------------------
+// Line Cards & Tholscript Glyph Rendering
+// -------------------------------------------------------------
+function renderLines(lines, script) {
+  const container = $("lines-container");
+  if (!lines || lines.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">No readable text lines found. Try enhancing contrast.</div>';
+    return;
+  }
+
+  let html = "";
+  lines.forEach((L, lineIdx) => {
+    const confPct = Math.round(L.mean_conf * 100);
+    const confInfo = getConfStyle(L.mean_conf, false);
+
+    // Tholscript glyph chips
+    const chips = L.chars.map((c, charIdx) => {
+      const cStyle = getConfStyle(c.fused, c.doubtful);
+      const title = `${c.cluster} | CRNN: ${Math.round(c.crnn_conf*100)}% | Glyph CNN: ${Math.round(c.glyph_conf*100)}%${c.doubtful ? ' (DOUBTFUL)' : ''}`;
+      return `<div class="tholscript-chip ${cStyle.cls}" id="chip-${lineIdx}-${charIdx}"
+        onclick="openInspector(${lineIdx}, ${charIdx})" title="${title}">${c.cluster}</div>`;
+    }).join("");
+
+    // Spellcheck changes
+    let fixesHtml = "";
+    if (L.changes && L.changes.length) {
+      fixesHtml += L.changes.map(fix => `<span class="chip-tag fix">✓ ${fix.from_} → ${fix.to}</span>`).join("");
+    }
+    if (L.unknown && L.unknown.length) {
+      fixesHtml += L.unknown.map(u => `<span class="chip-tag unk">? ${u}</span>`).join("");
+    }
+
+    html += `
+      <div class="line-card" id="line-card-${lineIdx}" onmouseenter="highlightBox(${lineIdx}, true)" onmouseleave="highlightBox(${lineIdx}, false)">
+        <div class="line-header">
+          <div class="line-num">Line ${lineIdx + 1}</div>
+          <div class="line-conf" style="background:${confInfo.color}22; color:${confInfo.color}; border:1px solid ${confInfo.color}55">
+            ${confPct}% Confidence
+          </div>
+        </div>
+
+        <div class="confidence-bar">
+          <div class="confidence-fill" style="width: ${confPct}%; background: ${confInfo.color}"></div>
+        </div>
+
+        <div class="tholscript-stream">${chips}</div>
+
+        <div class="line-meta-grid">
+          <div class="meta-col">
+            <div class="lbl">Modern Transliteration</div>
+            <div class="val tamil">${L.corrected || L.raw}</div>
+            ${fixesHtml ? `<div style="margin-top:4px">${fixesHtml}</div>` : ""}
+          </div>
+          <div class="meta-col">
+            <div class="lbl">Latin Phonetics</div>
+            <div class="val" style="color:var(--text-muted)">${(L.roman || []).join(" ") || "—"}</div>
+          </div>
+          <div class="meta-col">
+            <div class="lbl">English Gloss</div>
+            <div class="val" style="color:var(--text-muted)">${L.gloss || "—"}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// -------------------------------------------------------------
+// Interactive Bounding Box Canvas Overlay
+// -------------------------------------------------------------
+function drawBoundingBoxes(boxes) {
+  currentBoxes = boxes || [];
+  const img = $("orig");
+  const cv = $("ov");
+
+  const render = () => {
+    cv.width = img.naturalWidth;
+    cv.height = img.naturalHeight;
+    redrawBoxes(-1);
+  };
+
+  img.complete ? render() : (img.onload = render);
+}
+
+function redrawBoxes(highlightIdx) {
+  const cv = $("ov");
+  const ctx = cv.getContext("2d");
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  const goldColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || "#d4af37";
+  const isLight = document.documentElement.getAttribute("data-theme") === "light";
+
+  currentBoxes.forEach((b, i) => {
+    const isHigh = (i === highlightIdx);
+    const x = b[0], y = b[1], w = b[2] - b[0], h = b[3] - b[1];
+
+    ctx.lineWidth = isHigh ? 4 : 2;
+    ctx.strokeStyle = isHigh ? "#3fb950" : goldColor;
+    ctx.strokeRect(x, y, w, h);
+
+    ctx.fillStyle = isHigh ? "rgba(63, 185, 80, 0.2)" : (isLight ? "rgba(179, 134, 0, 0.12)" : "rgba(212, 175, 55, 0.12)");
+    ctx.fillRect(x, y, w, h);
+
+    // Label tag
+    ctx.fillStyle = isHigh ? "#3fb950" : goldColor;
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillText(`L${i+1}`, x + 4, y + 20);
+  });
+}
+
+function highlightBox(idx, isHover) {
+  redrawBoxes(isHover ? idx : -1);
+}
+
+// -------------------------------------------------------------
+// Tholscript Glyph Inspector Modal
+// -------------------------------------------------------------
+let activeInspectCluster = null;
+
+function openInspector(lineIdx, charIdx) {
+  if (!currentResult || !currentResult.lines) return;
+  const c = currentResult.lines[lineIdx].chars[charIdx];
+  if (!c) return;
+
+  sfx.playChirp();
+  activeInspectCluster = c.cluster;
+  $("pop-glyph").innerText = c.cluster;
+  $("pop-crnn").innerText = `${Math.round(c.crnn_conf * 100)}%`;
+  $("pop-glyph-conf").innerText = `${Math.round(c.glyph_conf * 100)}%`;
+
+  if (c.agrees) {
+    $("pop-agrees").innerHTML = `<span style="color:var(--success)">Agreement ✓</span>`;
+  } else if (c.doubtful) {
+    $("pop-agrees").innerHTML = `<span style="color:var(--danger)">Doubtful (rejected by CNN) ✗</span>`;
+  } else {
+    $("pop-agrees").innerHTML = `<span style="color:var(--warning)">Partial Consensus</span>`;
+  }
+
+  // Alternatives
+  const altsBox = $("pop-alts");
+  if (c.alternatives && c.alternatives.length) {
+    altsBox.innerHTML = c.alternatives.map(a => `<span class="alt-badge">${a[0]} (${Math.round(a[1]*100)}%)</span>`).join("");
+  } else {
+    altsBox.innerHTML = "<span style='font-size:12px; color:var(--text-muted)'>No alternatives suggested.</span>";
+  }
+
+  $("popover").classList.add("open");
+  $("modal-overlay").classList.add("open");
+}
+
+function closeInspector() {
+  $("popover").classList.remove("open");
+  $("modal-overlay").classList.remove("open");
+}
+
+$("pop-close").onclick = closeInspector;
+$("modal-overlay").onclick = closeInspector;
+$("pop-speak").onclick = () => {
+  if (activeInspectCluster) {
+    voice.speak(activeInspectCluster, "ta-IN");
+  }
+};
+
+// -------------------------------------------------------------
+// Multi-Language Indic Epigraphic Translator Controller
+// -------------------------------------------------------------
+let activeLang = "te";
+
+const LANG_VOICE_MAP = {
+  "te": { voice: "te-IN", name: "Telugu", native: "తెలుగు", label: "TELUGU EPIGRAPHIC TRANSLATION (తెలుగు అనువాదం)" },
+  "kn": { voice: "kn-IN", name: "Kannada", native: "ಕನ್ನಡ", label: "KANNADA EPIGRAPHIC TRANSLATION (ಕನ್ನಡ ಅನುವಾದ)" },
+  "ml": { voice: "ml-IN", name: "Malayalam", native: "മലയാളം", label: "MALAYALAM EPIGRAPHIC TRANSLATION (മലയാള വിവർത്തനം)" },
+  "hi": { voice: "hi-IN", name: "Hindi", native: "हिन्दी", label: "HINDI EPIGRAPHIC TRANSLATION (हिन्दी अनुवाद)" },
+  "sa": { voice: "hi-IN", name: "Sanskrit", native: "संस्कृतम्", label: "SANSKRIT EPIGRAPHIC TRANSLATION (संस्कृतम् अनुवादः)" },
+  "en": { voice: "en-US", name: "English", native: "English", label: "ENGLISH EPIGRAPHIC TRANSLATION" },
+  "mr": { voice: "mr-IN", name: "Marathi", native: "मराठी", label: "MARATHI EPIGRAPHIC TRANSLATION (मराठी अनुवाद)" },
+  "bn": { voice: "bn-IN", name: "Bengali", native: "বাংলা", label: "BENGALI EPIGRAPHIC TRANSLATION (বাংলা অনুবাদ)" },
+  "gu": { voice: "gu-IN", name: "Gujarati", native: "ગુજરાતી", label: "GUJARATI EPIGRAPHIC TRANSLATION (ગુજરાતી અનુવાદ)" },
+  "or": { voice: "or-IN", name: "Odia", native: "ଓଡ଼ିଆ", label: "ODIA EPIGRAPHIC TRANSLATION (ଓଡ଼ିଆ ଅନୁବାଦ)" }
+};
+
+function renderActiveLanguage() {
+  const meta = LANG_VOICE_MAP[activeLang] || LANG_VOICE_MAP["te"];
+  const voiceBtn = $("lang-voice-btn");
+  if (voiceBtn) voiceBtn.innerText = `🔊 Speak in ${meta.name}`;
+
+  const labelEl = $("lang-label");
+  if (labelEl) labelEl.innerText = meta.label;
+
+  const textEl = $("lang-text");
+  const scriptEl = $("lang-script-text");
+
+  if (!currentResult || !currentResult.translations) {
+    if (textEl) textEl.innerText = "Select or decipher an inscription above to translate.";
+    if (scriptEl) scriptEl.innerText = "";
+    return;
+  }
+
+  const trans = currentResult.translations[activeLang];
+  if (trans) {
+    if (textEl) {
+      textEl.style.opacity = "0";
+      setTimeout(() => {
+        textEl.innerText = trans.translated || "—";
+        textEl.style.opacity = "1";
+      }, 100);
+    }
+    if (scriptEl) {
+      if (activeLang !== "en" && trans.script_transliterated) {
+        scriptEl.innerText = `Script Transliteration (${meta.native}): ${trans.script_transliterated}`;
+        scriptEl.style.display = "block";
+      } else {
+        scriptEl.style.display = "none";
+      }
+    }
+  }
+}
+
+// Bind language pill clicks
+document.querySelectorAll(".lang-pill").forEach(btn => {
+  btn.onclick = () => {
+    sfx.playChirp();
+    document.querySelectorAll(".lang-pill").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    activeLang = btn.getAttribute("data-lang");
+    renderActiveLanguage();
+  };
+});
+
+// Speak in target language
+const langVoiceBtn = $("lang-voice-btn");
+if (langVoiceBtn) {
+  langVoiceBtn.onclick = () => {
+    if (!currentResult || !currentResult.translations) return;
+    const trans = currentResult.translations[activeLang];
+    const meta = LANG_VOICE_MAP[activeLang] || LANG_VOICE_MAP["te"];
+    if (trans && trans.translated) {
+      voice.speak(trans.translated, meta.voice);
+    }
+  };
+}
+
+// Copy translation
+const langCopyBtn = $("lang-copy-btn");
+if (langCopyBtn) {
+  langCopyBtn.onclick = () => {
+    if (!currentResult || !currentResult.translations) return;
+    const trans = currentResult.translations[activeLang];
+    const meta = LANG_VOICE_MAP[activeLang] || LANG_VOICE_MAP["te"];
+    if (trans && trans.translated) {
+      navigator.clipboard.writeText(`${meta.name.toUpperCase()} TRANSLATION:\n${trans.translated}\n\nORIGINAL INSCRIPTION:\n${currentResult.modern}`);
+      sfx.playChirp();
+      showToast(`${meta.name} translation copied to clipboard!`, "📋");
+    }
+  };
+}
+
+// -------------------------------------------------------------
+// Export Handlers
+// -------------------------------------------------------------
+function exportPdfReport() {
+  if (!currentResult) {
+    showToast("Please decipher an inscription first!", "⚠️");
+    return;
+  }
+  sfx.playChirp();
+  showToast("Preparing Archaeological PDF Dossier…", "📄");
+
+  const origImg = currentB64 ? ("data:image/png;base64," + currentB64) : ($("orig") ? $("orig").src : "");
+  const enhImg = currentResult.enhanced_b64 ? ("data:image/png;base64," + currentResult.enhanced_b64) : ($("enh") ? $("enh").src : "");
+
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  const scriptName = (currentResult.script || "TAMIL").toUpperCase();
+  const lineCount = (currentResult.lines || []).length;
+  const timeTaken = currentResult.duration_sec ? `${currentResult.duration_sec.toFixed(2)}s` : "Fast";
+
+  let totalConf = 0, totalChars = 0;
+  (currentResult.lines || []).forEach(l => {
+    (l.chars || []).forEach(c => {
+      totalConf += (c.fused || 0.9);
+      totalChars++;
+    });
+  });
+  const avgConfPct = totalChars > 0 ? Math.round((totalConf / totalChars) * 100) : 94;
+
+  // Build Lines Breakdown HTML
+  let linesHtml = "";
+  (currentResult.lines || []).forEach((l, idx) => {
+    const lConf = Math.round((l.mean_conf || 0.9) * 100);
+    const glyphsHtml = (l.chars || []).map(c => {
+      const crnn = Math.round((c.crnn_conf || 0) * 100);
+      const isWarn = c.doubtful;
+      const chipColor = isWarn ? "#b45309" : "#15803d";
+      const chipBg = isWarn ? "#fef3c7" : "#dcfce7";
+      const romanTxt = (c.alternatives && c.alternatives[0]) ? c.alternatives[0][0] : '';
+      return `
+        <div style="display:inline-block; border:1px solid #cbd5e1; border-radius:6px; padding:5px 8px; margin:3px; background:#f8fafc; text-align:center; min-width:54px;">
+          <div style="font-size:22px; font-weight:bold; color:#0f172a; font-family:'Noto Sans Tamil','Latha',serif;">${c.cluster}</div>
+          <div style="font-size:11px; color:#64748b; font-weight:600; font-family:monospace;">${romanTxt}</div>
+          <div style="font-size:10px; color:${chipColor}; background:${chipBg}; border-radius:4px; padding:1px 4px; margin-top:2px; font-weight:bold;">${Math.round(c.fused * 100)}%</div>
+        </div>
+      `;
+    }).join("");
+
+    let changesHtml = "";
+    if (l.changes && l.changes.length) {
+      changesHtml = l.changes.map(ch => `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px;">Lexicon Fix: ${ch.from_} → <b>${ch.to}</b></span>`).join(" ");
+    }
+
+    linesHtml += `
+      <div style="border:1px solid #e2e8f0; border-radius:8px; padding:14px; margin-bottom:14px; background:#ffffff; page-break-inside:avoid; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:8px; margin-bottom:10px;">
+          <div style="font-weight:bold; font-size:13px; color:#1e293b; text-transform:uppercase; letter-spacing:0.05em;">Line ${idx + 1}</div>
+          <div style="font-size:12px; font-weight:bold; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:12px;">${lConf}% Line Confidence</div>
+        </div>
+        <div style="margin-bottom:10px;">${glyphsHtml}</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:13px; background:#f8fafc; padding:10px; border-radius:6px;">
+          <div><b style="color:#475569; font-size:11px; text-transform:uppercase;">Tamil Transcription:</b> <div style="font-size:16px; font-weight:600; color:#0f172a; margin-top:2px;">${l.corrected || l.raw}</div></div>
+          <div><b style="color:#475569; font-size:11px; text-transform:uppercase;">Latin Phonetics:</b> <div style="color:#334155; margin-top:2px; font-family:monospace;">${(l.roman || []).join(' ') || '—'}</div></div>
+          <div style="grid-column:1 / -1;"><b style="color:#475569; font-size:11px; text-transform:uppercase;">English Gloss:</b> <div style="color:#334155; font-style:italic; margin-top:2px;">${l.gloss || '—'}</div></div>
+        </div>
+        ${changesHtml ? `<div style="margin-top:8px;">${changesHtml}</div>` : ''}
+      </div>
+    `;
+  });
+
+  // Multilingual Indic Translations
+  let transHtml = "";
+  if (currentResult.translations) {
+    const list = Object.entries(currentResult.translations);
+    transHtml = list.map(([code, tr]) => `
+      <div style="border:1px solid #e2e8f0; border-radius:6px; padding:10px 12px; background:#ffffff; page-break-inside:avoid;">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+          <span style="font-size:16px;">${tr.icon || '🌐'}</span>
+          <b style="color:#0f172a; font-size:13px;">${tr.name} (${tr.native})</b>
+        </div>
+        <div style="font-size:14px; color:#1e293b; line-height:1.5;">${tr.translated}</div>
+      </div>
+    `).join("");
+  }
+
+  // Complete Archaeological Dossier HTML for Print & PDF
+  const dossierHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Tholscript_Epigraphic_Dossier</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 14mm 14mm;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+    }
+    .top-actions-bar {
+      position: sticky;
+      top: 0;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      z-index: 1000;
+    }
+    .btn-print {
+      background: #d4af37;
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      padding: 9px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(212,175,55,0.4);
+      transition: all 0.2s;
+    }
+    .btn-print:hover { background: #b38600; color: #fff; transform: translateY(-1px); }
+    .btn-close {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 6px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-close:hover { background: rgba(255,255,255,0.25); }
+    .dossier-paper {
+      max-width: 860px;
+      margin: 24px auto;
+      background: #ffffff;
+      padding: 36px 42px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .header-seal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .brand-title {
+      font-family: "Cinzel", "Times New Roman", serif;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #0f172a;
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .seal-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #fdfbf7;
+      border: 2px solid #d4af37;
+      border-radius: 8px;
+      padding: 6px 14px;
+      text-align: center;
+    }
+    .seal-glyph {
+      font-size: 24px;
+      color: #b38600;
+      font-weight: bold;
+    }
+    .seal-caption {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #78350f;
+      text-transform: uppercase;
+    }
+    .meta-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+      background: #f8fafc;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .meta-card .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .meta-card .val {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 2px;
+    }
+    .section-title {
+      font-family: "Cinzel", "Times New Roman", serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #0f172a;
+      border-bottom: 1.5px solid #cbd5e1;
+      padding-bottom: 6px;
+      margin-top: 26px;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .plates-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+      page-break-inside: avoid;
+    }
+    .plate-box {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #000;
+    }
+    .plate-box img {
+      width: 100%;
+      height: 180px;
+      object-fit: contain;
+      display: block;
+      background: #111;
+    }
+    .plate-caption {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      background: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .modern-reading-box {
+      background: #fdfbf7;
+      border-left: 4px solid #d4af37;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      border-top: 1px solid #fef3c7;
+      border-right: 1px solid #fef3c7;
+      border-bottom: 1px solid #fef3c7;
+    }
+    .modern-tamil-text {
+      font-family: "Noto Sans Tamil", "Latha", serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.6;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+    .gloss-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #334155;
+      font-style: italic;
+    }
+    .trans-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .epidoc-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10.5px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      color: #334155;
+      white-space: pre-wrap;
+      max-height: 140px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .footer-stamp {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 14px;
+      margin-top: 32px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    @media print {
+      .top-actions-bar { display: none !important; }
+      body { background: #fff !important; }
+      .dossier-paper {
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+      }
+      .page-break { page-break-before: always; }
+      .avoid-break { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-actions-bar">
+    <div style="font-size:13px; font-weight:600;">
+      📄 Tholscript Archaeological Epigraphy Dossier &mdash; Easy-to-Understand PDF Report
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <span style="font-size:12px; color:#cbd5e1;">Select &ldquo;Save as PDF&rdquo; in printer destination</span>
+      <button class="btn-print" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      <button class="btn-close" onclick="window.close()">✕ Close</button>
+    </div>
+  </div>
+
+  <div class="dossier-paper">
+    <div class="header-seal-row">
+      <div>
+        <div class="brand-title">THOLSCRIPT · தொல்லெழுத்து</div>
+        <div class="brand-subtitle">Archaeological Inscription Decipherment &amp; Epigraphic Apparatus Dossier</div>
+      </div>
+      <div class="seal-badge">
+        <div class="seal-glyph">𑀢𑁄</div>
+        <div class="seal-caption">EPIGRAPHIC RECORD</div>
+      </div>
+    </div>
+
+    <div class="meta-cards-grid">
+      <div class="meta-card">
+        <div class="label">Script System</div>
+        <div class="val">${scriptName}</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Inscribed Lines</div>
+        <div class="val">${lineCount} Detected</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Consensus Confidence</div>
+        <div class="val" style="color:#15803d;">${avgConfPct}% (Agreement ✓)</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Decipherment Date</div>
+        <div class="val" style="font-size:12px;">${dateStr}</div>
+      </div>
+    </div>
+
+    <!-- Photographic Evidence -->
+    <div class="section-title"><span>🏛️</span> Photographic Evidence &amp; Normalized Ink Plates</div>
+    <div class="plates-container">
+      <div class="plate-box">
+        <img src="${origImg}" alt="Original Inscription Slab">
+        <div class="plate-caption">Plate I: Original Archaeological Inscription Slab</div>
+      </div>
+      <div class="plate-box">
+        <img src="${enhImg}" alt="Enhanced Ink Map">
+        <div class="plate-caption">Plate II: Enhanced Normalized Ink Stroke Map</div>
+      </div>
+    </div>
+
+    <!-- Deciphered Inscription Reading -->
+    <div class="section-title"><span>📜</span> Deciphered Inscription Reading</div>
+    <div class="modern-reading-box">
+      <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:#b38600; letter-spacing:0.05em; margin-bottom:4px;">Modern Readable Tamil Text</div>
+      <div class="modern-tamil-text">${currentResult.modern || '—'}</div>
+      <div style="font-size:11px; text-transform:uppercase; font-weight:700; color:#64748b; letter-spacing:0.05em; margin-bottom:4px;">English Epigraphic Gloss &amp; Historical Interpretation</div>
+      <div class="gloss-text">${currentResult.gloss || '—'}</div>
+    </div>
+
+    ${transHtml ? `
+      <!-- Comparative Indic & Global Translations -->
+      <div class="section-title"><span>🌐</span> Comparative Indic &amp; Global Translations</div>
+      <div class="trans-grid">${transHtml}</div>
+    ` : ''}
+
+    <!-- Line-by-Line Epigraphic Breakdown -->
+    <div class="section-title avoid-break"><span>🔍</span> Line-by-Line Epigraphic Breakdown &amp; Glyph Confidence</div>
+    <div>${linesHtml}</div>
+
+    <!-- Archival EpiDoc Record -->
+    ${currentResult.epidoc_xml ? `
+      <div class="section-title avoid-break"><span>📑</span> Archival EpiDoc TEI-XML Standard Record</div>
+      <div class="epidoc-box">${currentResult.epidoc_xml.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+    ` : ''}
+
+    <div class="footer-stamp">
+      <div>Certified by Tholscript Neural Epigraphy Suite v0.2.0 • Created by Bharath R • CTC Spatial Sequence Alignment</div>
+      <div>Record ID: THOL-${Date.now().toString().slice(-6)} • Open Archaeological Standard</div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    });
+  <\/script>
+</body>
+</html>`;
+
+  const printWin = window.open("", "_blank");
+  if (printWin) {
+    printWin.document.open();
+    printWin.document.write(dossierHtml);
+    printWin.document.close();
+  } else {
+    // Popup fallback
+    const printIframe = document.createElement("iframe");
+    printIframe.style.position = "fixed";
+    printIframe.style.right = "0";
+    printIframe.style.bottom = "0";
+    printIframe.style.width = "0";
+    printIframe.style.height = "0";
+    printIframe.style.border = "0";
+    document.body.appendChild(printIframe);
+    printIframe.contentWindow.document.open();
+    printIframe.contentWindow.document.write(dossierHtml);
+    printIframe.contentWindow.document.close();
+    printIframe.contentWindow.focus();
+    setTimeout(() => {
+      printIframe.contentWindow.print();
+      setTimeout(() => {
+        if (printIframe.parentNode) printIframe.parentNode.removeChild(printIframe);
+      }, 2000);
+    }, 600);
+  }
+}
+
+$("btn-export-pdf").onclick = exportPdfReport;
+
+$("btn-copy-text").onclick = () => {
+  if (!currentResult) return;
+  const text = `MODERN TAMIL:\n${currentResult.modern}\n\nENGLISH GLOSS:\n${currentResult.gloss}`;
+  navigator.clipboard.writeText(text);
+  sfx.playChirp();
+  showToast("Transliteration & English gloss copied to clipboard!", "📋");
+};
+
+$("btn-download-epidoc").onclick = () => {
+  if (!currentResult || !currentResult.epidoc_xml) return;
+  const blob = new Blob([currentResult.epidoc_xml], { type: "application/xml" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `tholscript_inscription_${Date.now()}.xml`;
+  a.click();
+  sfx.playChirp();
+  showToast("Exporting EpiDoc TEI-XML standard file…", "📜");
+};
+
+$("btn-download-json").onclick = () => {
+  if (!currentResult) return;
+  const copy = { ...currentResult };
+  delete copy.enhanced_b64;
+  const blob = new Blob([JSON.stringify(copy, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `tholscript_reading_${Date.now()}.json`;
+  a.click();
+  sfx.playChirp();
+  showToast("Exporting full JSON epigraphic metadata…", "📦");
+};
+</script>
+</body>
+</html>

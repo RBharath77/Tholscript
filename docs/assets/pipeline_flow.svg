@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 180" width="100%" height="180">
+  <defs>
+    <linearGradient id="pipeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+
+    <linearGradient id="nodeGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#21262d"/>
+      <stop offset="100%" stop-color="#161b22"/>
+    </linearGradient>
+
+    <!-- Moving pulse gradient for connection lines -->
+    <linearGradient id="pulseGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/>
+      <stop offset="50%" stop-color="#f6d365" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#d4af37" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    @keyframes dashMove {
+      to { stroke-dashoffset: -40; }
+    }
+    @keyframes dotTravel {
+      0% { cx: 70; }
+      20% { cx: 215; }
+      40% { cx: 360; }
+      60% { cx: 505; }
+      80% { cx: 650; }
+      100% { cx: 780; }
+    }
+    .flow-line {
+      stroke: #30363d;
+      stroke-width: 2.5;
+      stroke-dasharray: 6,4;
+      animation: dashMove 1.5s linear infinite;
+    }
+    .node-box {
+      fill: url(#nodeGold);
+      stroke: #d4af37;
+      stroke-width: 1.5;
+      rx: 8px;
+      transition: all 0.3s;
+    }
+    .node-box:hover {
+      stroke: #58a6ff;
+      fill: #1c2128;
+    }
+    .node-title {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      fill: #f0f6fc;
+      text-anchor: middle;
+    }
+    .node-sub {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+      font-size: 9.5px;
+      fill: #8b949e;
+      text-anchor: middle;
+    }
+    .step-pill {
+      font-family: monospace;
+      font-size: 8.5px;
+      font-weight: bold;
+      fill: #d4af37;
+      text-anchor: middle;
+    }
+  </style>
+
+  <rect width="848" height="178" x="1" y="1" rx="10" fill="url(#pipeBg)" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Connecting animated data-bus line -->
+  <line x1="75" y1="88" x2="775" y2="88" class="flow-line" stroke="#d4af37"/>
+
+  <!-- Animated data packet traveling the pipeline -->
+  <circle cx="70" cy="88" r="4.5" fill="#f6d365">
+    <animate attributeName="cx" values="70;215;360;505;650;780" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;1;1;1;0" dur="4s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Node 1: Slab Photo -->
+  <g transform="translate(20, 38)">
+    <rect width="110" height="96" class="node-box"/>
+    <circle cx="55" cy="22" r="12" fill="rgba(212,175,55,0.15)"/>
+    <text x="55" y="26" text-anchor="middle" font-size="13">📸</text>
+    <text x="55" y="48" class="node-title">1. Raw Slab Photo</text>
+    <text x="55" y="64" class="node-sub">Real/Synthetic Stone</text>
+    <text x="55" y="78" class="node-sub">Erosion, Cracks, Light</text>
+    <text x="55" y="90" class="step-pill">INPUT</text>
+  </g>
+
+  <!-- Node 2: Adaptive CLAHE / Preprocess -->
+  <g transform="translate(160, 38)">
+    <rect width="112" height="96" class="node-box"/>
+    <circle cx="56" cy="22" r="12" fill="rgba(88,166,255,0.15)"/>
+    <text x="56" y="26" text-anchor="middle" font-size="13">🧪</text>
+    <text x="56" y="48" class="node-title">2. Ink Recovery</text>
+    <text x="56" y="64" class="node-sub">Adaptive CLAHE</text>
+    <text x="56" y="78" class="node-sub">Gaussian Binarizer</text>
+    <text x="56" y="90" class="step-pill">IoU ≈ 0.90</text>
+  </g>
+
+  <!-- Node 3: CRNN + CTC -->
+  <g transform="translate(302, 38)">
+    <rect width="118" height="96" class="node-box" stroke="#3fb950"/>
+    <circle cx="59" cy="22" r="12" fill="rgba(63,185,80,0.15)"/>
+    <text x="59" y="26" text-anchor="middle" font-size="13">⚡</text>
+    <text x="59" y="48" class="node-title">3. CRNN + CTC</text>
+    <text x="59" y="64" class="node-sub">Bi-LSTM (Hidden 96)</text>
+    <text x="59" y="78" class="node-sub">No Char-Cuts Needed</text>
+    <text x="59" y="90" class="step-pill" fill="#3fb950">PRIMARY</text>
+  </g>
+
+  <!-- Node 4: Glyph CNN Cross-Check -->
+  <g transform="translate(450, 38)">
+    <rect width="115" height="96" class="node-box" stroke="#a371f7"/>
+    <circle cx="57" cy="22" r="12" fill="rgba(163,113,247,0.15)"/>
+    <text x="57" y="26" text-anchor="middle" font-size="13">🔍</text>
+    <text x="57" y="48" class="node-title">4. Glyph CNN</text>
+    <text x="57" y="64" class="node-sub">Dual-Reader Opinion</text>
+    <text x="57" y="78" class="node-sub">Flags Doubtful (?)</text>
+    <text x="57" y="90" class="step-pill" fill="#a371f7">CONSENSUS</text>
+  </g>
+
+  <!-- Node 5: Lexicon & Spellcheck -->
+  <g transform="translate(595, 38)">
+    <rect width="112" height="96" class="node-box" stroke="#f0883e"/>
+    <circle cx="56" cy="22" r="12" fill="rgba(240,136,62,0.15)"/>
+    <text x="56" y="26" text-anchor="middle" font-size="13">📚</text>
+    <text x="56" y="48" class="node-title">5. Lexicon &amp; LM</text>
+    <text x="56" y="64" class="node-sub">3-Gram Char LM</text>
+    <text x="56" y="78" class="node-sub">Prakrit→Tamil Laws</text>
+    <text x="56" y="90" class="step-pill" fill="#f0883e">SPELLCHECK</text>
+  </g>
+
+  <!-- Node 6: Multi-Output -->
+  <g transform="translate(737, 38)">
+    <rect width="94" height="96" class="node-box" stroke="#f6d365"/>
+    <circle cx="47" cy="22" r="12" fill="rgba(246,211,101,0.2)"/>
+    <text x="47" y="26" text-anchor="middle" font-size="13">🌐</text>
+    <text x="47" y="48" class="node-title">6. Outputs</text>
+    <text x="47" y="64" class="node-sub">🔊 Tamil TTS</text>
+    <text x="47" y="76" class="node-sub">🌐 Indic Langs</text>
+    <text x="47" y="88" class="node-sub">📄 PDF Dossier</text>
+  </g>
+</svg>

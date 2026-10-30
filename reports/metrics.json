@@ -1,0 +1,105 @@
+{
+  "generated_at": "2026-10-29 16:18:38",
+  "tamil": {
+    "script": "tamil",
+    "lines": [
+      {
+        "level": 0,
+        "cer": 0.136,
+        "wer": 0.976,
+        "exact": 0.0
+      },
+      {
+        "level": 1,
+        "cer": 0.215,
+        "wer": 1.0,
+        "exact": 0.0
+      },
+      {
+        "level": 2,
+        "cer": 0.305,
+        "wer": 1.0,
+        "exact": 0.2
+      },
+      {
+        "level": 3,
+        "cer": 0.25,
+        "wer": 1.0,
+        "exact": 0.0
+      }
+    ],
+    "glyph": [
+      {
+        "level": 0,
+        "top1": 0.2,
+        "top3": 0.3
+      },
+      {
+        "level": 1,
+        "top1": 0.2,
+        "top3": 0.3
+      },
+      {
+        "level": 2,
+        "top1": 0.0,
+        "top3": 0.1
+      },
+      {
+        "level": 3,
+        "top1": 0.2,
+        "top3": 0.3
+      }
+    ]
+  },
+  "brahmi": {
+    "script": "brahmi",
+    "lines": [
+      {
+        "level": 0,
+        "cer": 0.118,
+        "wer": 0.933,
+        "exact": 0.4
+      },
+      {
+        "level": 1,
+        "cer": 0.051,
+        "wer": 0.92,
+        "exact": 0.2
+      },
+      {
+        "level": 2,
+        "cer": 0.145,
+        "wer": 0.956,
+        "exact": 0.0
+      },
+      {
+        "level": 3,
+        "cer": 0.075,
+        "wer": 1.0,
+        "exact": 0.4
+      }
+    ],
+    "glyph": [
+      {
+        "level": 0,
+        "top1": 0.1,
+        "top3": 0.5
+      },
+      {
+        "level": 1,
+        "top1": 0.0,
+        "top3": 0.1
+      },
+      {
+        "level": 2,
+        "top1": 0.0,
+        "top3": 0.0
+      },
+      {
+        "level": 3,
+        "top1": 0.1,
+        "top3": 0.1
+      }
+    ]
+  }
+}

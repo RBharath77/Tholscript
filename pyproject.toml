@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tholscript"
+version = "0.2.0"
+description = "THOLSCRIPT — Ancient Script Reader & Translator for Damaged Tamil & Brahmi Inscriptions"
+authors = [{ name = "Bharath R" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "numpy>=1.26",
+    "opencv-python>=4.8",
+    "pillow>=10.0",
+    "flask>=3.0",
+    "matplotlib>=3.8",
+    "scikit-learn>=1.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+tholscript = "tholscript.scripts.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tholscript*"]
+

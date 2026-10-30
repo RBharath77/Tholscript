@@ -1,0 +1,10 @@
+# THOLSCRIPT — ancient-script reader.  CPU-only friendly.
+# NOTE: install PyTorch FIRST with the CPU wheel index (see README):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+numpy>=1.26
+opencv-python>=4.8
+pillow>=10.0
+flask>=3.0
+matplotlib>=3.8
+scikit-learn>=1.4
+pytest>=8.0
